@@ -7,3 +7,4 @@ Base = declarative_base()
 
 Session = sessionmaker(bind=engine)
 Session.configure(bind=engine)
+

@@ -1,5 +1,7 @@
 from sqlalchemy import Column, Integer, String
-from sourdough.db.orm_config import Base, engine
+from sqlalchemy.orm import relationship
+
+from sourdough.db.orm_config import Base, engine, Session
 
 
 class User(Base):
@@ -9,7 +11,8 @@ class User(Base):
     name = Column(String)
     fullname = Column(String)
     email = Column(String)
+    sourdoughs = relationship("Sourdough", uselist=True)
 
     def __repr__(self):
         return "<User(name='%s', fullname='%s', email='%s')>" % (
-                             self.name, self.fullname, self.email)
+            self.name, self.fullname, self.email)

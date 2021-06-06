@@ -1,0 +1,15 @@
+from sourdough.db.models.sourdough_table import Sourdough
+from sourdough.db.models.user_table import User
+from sourdough.db.orm_config import Base, engine, Session
+
+if __name__ == '__main__':
+    Base.metadata.create_all(engine)
+    my_user = User(name="Peeps", fullname="Peeps Peepsy", email="peeps@gmail.com")
+    session = Session()
+    session.add(my_user)
+    session.flush()
+    my_sourdough = Sourdough(weight=100, user_id=my_user.id)
+    session.add(my_sourdough)
+    session.commit()
+    print(my_user.name)
+    print(my_user.id)
