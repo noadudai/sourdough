@@ -1,8 +1,7 @@
 from sqlalchemy import Column, Integer, ForeignKey
 from sqlalchemy.orm import relationship
 
-from sourdough.db.orm_config import Base, engine, Session
-from sourdough.db.models.user_table import User
+from sourdough.db.orm_config import Base
 
 
 class Sourdough(Base):
@@ -12,6 +11,7 @@ class Sourdough(Base):
     user_id = Column(Integer, ForeignKey('users.id'))
     weight = Column(Integer)
     user = relationship("User")
+    feedings = relationship("Feeding", uselist=True)
 
     def __repr__(self):
-        return "<Sourdough(sourdough_weight='%s')>" % self.sourdough_weight
+        return "<Sourdough(sourdough_weight='%s')>" % self.weight
