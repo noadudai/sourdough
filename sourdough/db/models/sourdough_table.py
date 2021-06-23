@@ -11,7 +11,6 @@ class Sourdough(Base):
     user_id = Column(Integer, ForeignKey('users.id'))
     weight = Column(Integer)
     user = relationship("User")
-    feedings = relationship("Feeding", uselist=True)
 
     def __repr__(self):
         return "<Sourdough(sourdough_weight='%s')>" % self.weight

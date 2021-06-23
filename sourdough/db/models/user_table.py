@@ -9,12 +9,10 @@ class User(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String)
-    fullname = Column(String)
+    last_name = Column(String)
     email = Column(String)
     sourdoughs = relationship("Sourdough", uselist=True)
-    feedings = relationship("Feeding", uselist=True)
-    leavens = relationship("Leaven", uselist=True)
 
     def __repr__(self):
-        return "<User(name='%s', fullname='%s', email='%s')>" % (
-            self.name, self.fullname, self.email)
+        return "<User(name='%s', last_name='%s', email='%s')>" % (
+            self.name, self.last_name, self.email)
