@@ -14,6 +14,9 @@ def create_account():
     my_user = User(name=name, last_name=last_name, email=email)
     session = Session()
     session.add(my_user)
+    session.flush()
+    my_sourdough = Sourdough(weight=0, user_id=my_user.id)
+    session.add(my_sourdough)
     session.commit()
     return "created"
 
