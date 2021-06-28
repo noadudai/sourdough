@@ -8,8 +8,8 @@ class FeedingActions(Base):
     __tablename__ = 'feeding_actions'
     id = Column(Integer, primary_key=True, nullable=False)
 
-    sourdoug_id = Column(Integer, ForeignKey('sourdoughs.id'), nullable=False)
-    sourdouh = relationship("Sourdough")
+    sourdough_id = Column(Integer, ForeignKey('sourdough_starters.id'), nullable=False)
+    sourdough = relationship("Sourdough", back_populates="feeding_actions")
     when = Column(DateTime, default=datetime.datetime.now)
     water_weight_added_in_grams = Column(Integer)
     flour_weight_added_in_grams = Column(Integer)

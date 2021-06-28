@@ -8,8 +8,8 @@ class LeavenExtractions(Base):
     __tablename__ = 'leaven_extractions'
     id = Column(Integer, primary_key=True, nullable=False)
 
-    sourdoug_id = Column(Integer, ForeignKey('sourdoughs.id'), nullable=False)
-    sourdouh = relationship("Sourdough")
+    sourdough_id = Column(Integer, ForeignKey('sourdough_starters.id'), nullable=False)
+    sourdough = relationship("Sourdough", back_populates="leaven_extractions")
     when = Column(DateTime, default=datetime.datetime.now)
     sourdough_weight_used_in_grams = Column(Integer)
 

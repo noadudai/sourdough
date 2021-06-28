@@ -8,8 +8,8 @@ class RefrigeratorActions(Base):
     __tablename__ = 'refrigerator_actions'
     id = Column(Integer, primary_key=True, nullable=False)
 
-    sourdoug_id = Column(Integer, ForeignKey('sourdoughs.id'), nullable=False)
-    sourdouh = relationship("Sourdough")
+    sourdough_id = Column(Integer, ForeignKey('sourdough_starters.id'), nullable=False)
+    sourdough = relationship("Sourdough", back_populates="refrigerator_actions")
     when = Column(DateTime, default=datetime.datetime.now)
     in_or_out = Column(String)
 

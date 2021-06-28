@@ -11,7 +11,7 @@ class User(Base):
     name = Column(String)
     last_name = Column(String)
     email = Column(String)
-    sourdoughs = relationship("Sourdough", uselist=True)
+    sourdoughs = relationship("Sourdough", uselist=True, back_populates="user")
 
     def __repr__(self):
         return "<User(name='%s', last_name='%s', email='%s')>" % (
