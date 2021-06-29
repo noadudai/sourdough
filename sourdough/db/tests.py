@@ -34,24 +34,38 @@ def show_all_users():
     return jsonify(return_str)
 
 
+@app.route('/add_a_feeding_action', methods=['GET', 'POST'])
+def adding_a_feeding_action():
+    user_email = request.args.get('email')
+    water_weight = request.args.get('water_weight_added_in_grams')
+    flour_weight = request.args.get('flour_weight_added_in_grams')
+    session = Session()
+    user_id = session.query(User.id).filter_by(email=user_email).one()
+    my_feeding_action = FeedingActions(sourdough_id=user_id.id,
+                                       water_weight_added_in_grams=int(water_weight),
+                                       flour_weight_added_in_grams=int(flour_weight))
+    session.add(my_feeding_action)
+    session.commit()
+    return "A new feeding action created"
+
+
 # @app.route('/add_a_target')
 # def adding_a_sourdough_target():
-  #   name = request.args.get('name')
-  #   last_name = request.args.get('last_name')
-  #   date_time = request.args.get('when')
-  #   sourdough_weight = request.args.get('sourdough_weight_target_in_grams')
-  #   session = Session()
-  #   my_user = session.query(User).filter(name=name).filter(last_name=last_name)
-  #   my_sourdough = session.query(Sourdough).flter_by(user_id=my_user.id)
-  #   my_target = SourdoughTargets(sourdough_id=my_sourdough.id,
-  #                                when=date_time,
-  #                                sourdough_weight_target_in_grams=int(sourdough_weight))
-  #   session.add(my_target)
-  #   session.commit()
-  #   return "A new target created"
+#   name = request.args.get('name')
+#   last_name = request.args.get('last_name')
+#   date_time = request.args.get('when')
+#   sourdough_weight = request.args.get('sourdough_weight_target_in_grams')
+#   session = Session()
+#   my_user = session.query(User).filter(name=name).filter(last_name=last_name)
+#   my_sourdough = session.query(Sourdough).flter_by(user_id=my_user.id)
+#   my_target = SourdoughTargets(sourdough_id=my_sourdough.id,
+#                                when=date_time,
+#                                sourdough_weight_target_in_grams=int(sourdough_weight))
+#   session.add(my_target)
+#   session.commit()
+#   return "A new target created"
 
-
-Base.metadata.create_all(engine)
+# Base.metadata.create_all(engine)
 
 
 if __name__ == '__main__':

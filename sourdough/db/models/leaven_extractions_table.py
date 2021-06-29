@@ -10,9 +10,9 @@ class LeavenExtractions(Base):
 
     sourdough_id = Column(Integer, ForeignKey('sourdough_starters.id'), nullable=False)
     sourdough = relationship("Sourdough", back_populates="leaven_extractions")
-    when = Column(DateTime, default=datetime.datetime.now)
+    date_of_action = Column(DateTime, default=datetime.datetime.now)
     sourdough_weight_used_in_grams = Column(Integer)
 
     def __repr__(self):
-        return "<(LeavenExtractions(when='%s', sourdough_weight_used_in_grams='%s')>" % (
-            self.when, self.sourdough_weight_used_in_grams)
+        return "<(LeavenExtractions(date_of_action='%s', sourdough_weight_used_in_grams='%s')>" % (
+            self.date_of_action, self.sourdough_weight_used_in_grams)

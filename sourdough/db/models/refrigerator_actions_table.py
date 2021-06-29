@@ -10,8 +10,8 @@ class RefrigeratorActions(Base):
 
     sourdough_id = Column(Integer, ForeignKey('sourdough_starters.id'), nullable=False)
     sourdough = relationship("Sourdough", back_populates="refrigerator_actions")
-    when = Column(DateTime, default=datetime.datetime.now)
+    date_of_action = Column(DateTime, default=datetime.datetime.now)
     in_or_out = Column(String)
 
     def __repr__(self):
-        return "<RefrigeratorActions(when='%s', in_or_out='%s')>" % (self.when, self.in_or_out)
+        return "<RefrigeratorActions(date_of_action='%s', in_or_out='%s')>" % (self.date_of_action, self.in_or_out)
