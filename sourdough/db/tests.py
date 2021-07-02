@@ -6,6 +6,7 @@ from sourdough.db.models.leaven_extractions_table import LeavenExtractions
 from sourdough.db.models.refrigerator_actions_table import RefrigeratorActions
 from sourdough.db.orm_config import Base, engine, Session
 from flask import Flask, request, jsonify
+import datetime
 
 app = Flask(__name__)
 
@@ -49,23 +50,23 @@ def adding_a_feeding_action():
     return "A new feeding action created"
 
 
-# @app.route('/add_a_target')
-# def adding_a_sourdough_target():
-#   name = request.args.get('name')
-#   last_name = request.args.get('last_name')
-#   date_time = request.args.get('when')
-#   sourdough_weight = request.args.get('sourdough_weight_target_in_grams')
-#   session = Session()
-#   my_user = session.query(User).filter(name=name).filter(last_name=last_name)
-#   my_sourdough = session.query(Sourdough).flter_by(user_id=my_user.id)
-#   my_target = SourdoughTargets(sourdough_id=my_sourdough.id,
-#                                when=date_time,
-#                                sourdough_weight_target_in_grams=int(sourdough_weight))
-#   session.add(my_target)
-#   session.commit()
-#   return "A new target created"
+@app.route('/add_a_target')
+def adding_a_sourdough_target():
+    user_email = request.args.get('email')
+    date_of_action = request.args.get('date_of_action')
+    date = datetime.datetime.strptime(date_of_action, '%Y-%m-%d %H:%M:%S')
+    sourdough_weight = request.args.get('sourdough_weight_target_in_grams')
+    session = Session()
+    my_user = session.query(User.id).filter_by(email=user_email).one()
+    my_target = SourdoughTargets(sourdough_id=my_user.id,
+                                 date_of_action=date,
+                                 sourdough_weight_target_in_grams=int(sourdough_weight))
+    session.add(my_target)
+    session.commit()
+    return "A new target created"
 
-# Base.metadata.create_all(engine)
+
+Base.metadata.create_all(engine)
 
 
 if __name__ == '__main__':
