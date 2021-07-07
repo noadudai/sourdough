@@ -54,7 +54,7 @@ def adding_a_feeding_action():
 def adding_a_sourdough_target():
     user_email = request.args.get('email')
     date_of_action = request.args.get('date_of_action')
-    date = datetime.datetime.strptime(date_of_action, '%Y-%m-%d %H:%M:%S')
+    date = datetime.datetime.strptime(date_of_action, '%Y-%m-%d')
     sourdough_weight = request.args.get('sourdough_weight_target_in_grams')
     session = Session()
     my_user = session.query(User.id).filter_by(email=user_email).one()
@@ -91,6 +91,29 @@ def adding_a_refrigerator_action():
     return "A new refrigerator action added"
 
 
+# @app.route('/my_action_today')
+def my_action_today(email):
+    # user_email = request.args.get('email')
+    user_email = email
+    session = Session()
+    my_user = session.query(User.id).filter_by(email=user_email).one()
+    my_target_date = session.query(SourdoughTargets.date_of_action).filter_by(sourdough_id=my_user.id)[-1]
+    # my_refrigerator_state = session.query(RefrigeratorActions.in_or_out).filter_by(sourdough_id=my_user.id)[-1]
+    # refrigerator_state = my_refrigerator_state.in_or_out
+    # refrigerator_day = my_refrigerator_state.date_of_action
+    today = datetime.datetime.today().date()
+    target = my_target_date.date_of_action
+    # refrigerator_date = datetime.date(int(refrigerator_day.year), int(refrigerator_day.month), int(refrigerator_day.day))
+    delta = target - today
+    if delta.days > 3:
+        return "the target is in more then 3 days, its in " + str(delta.days) + " days."
+    elif 3 >= delta.days > 0:
+        return "the target is " + str(delta.days) + " days"
+    else:
+        return "the target has passed!"
+
+
+print(my_action_today("peepsylu@gmail.com"))
 # Base.metadata.create_all(engine)
 
 
