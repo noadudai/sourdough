@@ -82,7 +82,9 @@ def test_to_add_a_feeding_action_to_db(session):
     session.add(sourdough)
     session.commit()
     session.flush()
-    feeding_action = FeedingActions(sourdough_id=sourdough.id, water_weight_added_in_grams=10, flour_weight_added_in_grams=10)
+    feeding_action = FeedingActions(sourdough_id=sourdough.id,
+                                    water_weight_added_in_grams=10,
+                                    flour_weight_added_in_grams=10)
     session.add(feeding_action)
     session.commit()
 
@@ -99,3 +101,63 @@ def test_to_add_a_refrigerator_action_to_db(session):
     refrigerator = RefrigeratorActions(sourdough_id=sourdough.id, in_or_out="in")
     session.add(refrigerator)
     session.commit()
+
+
+def test_check_how_many_days_there_is_until_the_date_of_the_target_or_how_many_days_passed(session):
+    user = User(name="Noa", last_name="Dudai", email="lgek@gamil.com")
+    session.add(user)
+    session.commit()
+    session.flush()
+    sourdough = Sourdough(user_id=user.id)
+    session.add(sourdough)
+    session.commit()
+    session.flush()
+    target_instance = SourdoughTargets(sourdough_id=sourdough.id,
+                                       date_of_action=datetime.date(2021, 7, 6),
+                                       sourdough_weight_target_in_grams=150)
+    target_instance2 = SourdoughTargets(sourdough_id=sourdough.id,
+                                        date_of_action=datetime.date(2021, 7, 18),
+                                        sourdough_weight_target_in_grams=150)
+    session.add(target_instance)
+    session.add(target_instance2)
+    session.commit()
+    my_target_date = session.query(SourdoughTargets.date_of_action).filter_by(sourdough_id=sourdough.id)[-1]
+    today = datetime.datetime.today().date()
+    target = my_target_date.date_of_action.date()
+    delta = target - today
+    return delta
+
+
+def test_if_sourdough_starter_is_in_thr_refrigerator(session):
+    user = User(name="Noa", last_name="Dudai", email="lgek@gamil.com")
+    session.add(user)
+    session.commit()
+    session.flush()
+    sourdough = Sourdough(user_id=user.id)
+    session.add(sourdough)
+    session.commit()
+    session.flush()
+    refrigerator = RefrigeratorActions(sourdough_id=sourdough.id, in_or_out="in")
+    session.add(refrigerator)
+    session.commit()
+    my_refrigerator_action = session.query(RefrigeratorActions.in_or_out).filter_by(sourdough_id=sourdough.id)[-1]
+    return my_refrigerator_action
+
+
+def test_to_check_how_many_days_is_the_sourdough_starter_in_the_refrigerator(session):
+    user = User(name="Noa", last_name="Dudai", email="lgek@gamil.com")
+    session.add(user)
+    session.commit()
+    session.flush()
+    sourdough = Sourdough(user_id=user.id)
+    session.add(sourdough)
+    session.commit()
+    session.flush()
+    refrigerator = RefrigeratorActions(sourdough_id=sourdough.id, in_or_out="in")
+    session.add(refrigerator)
+    session.commit()
+    my_refrigerator_date = session.query(RefrigeratorActions.date_of_action).filter_by(sourdough_id=sourdough.id)[-1]
+    today = datetime.datetime.today().date()
+    target = my_refrigerator_date.date_of_action.date()
+    delta = target - today
+    return delta
