@@ -10,8 +10,8 @@ class SourdoughTargets(Base):
 
     sourdough_id = Column(Integer, ForeignKey('sourdough_starters.id'), nullable=False)
     sourdough = relationship("Sourdough", back_populates="sourdough_targets")
-    date_of_action = Column(DateTime)
-    sourdough_weight_target_in_grams = Column(Integer)
+    date_of_action = Column(DateTime, nullable=False)
+    sourdough_weight_target_in_grams = Column(Integer, nullable=False)
 
     def __repr__(self):
         return "<SourdoughTarget(date_of_action='%s', sourdough_weight_target_in_grams='%s')>" % (

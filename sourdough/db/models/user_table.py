@@ -8,9 +8,9 @@ class User(Base):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True, nullable=False)
-    name = Column(String)
-    last_name = Column(String)
-    email = Column(String)
+    name = Column(String, nullable=False)
+    last_name = Column(String, nullable=False)
+    email = Column(String, nullable=False)
     sourdoughs = relationship("Sourdough", uselist=True, back_populates="user")
 
     def __repr__(self):

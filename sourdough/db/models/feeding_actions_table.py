@@ -11,8 +11,8 @@ class FeedingActions(Base):
     sourdough_id = Column(Integer, ForeignKey('sourdough_starters.id'), nullable=False)
     sourdough = relationship("Sourdough", back_populates="feeding_actions")
     date_of_action = Column(DateTime, default=datetime.datetime.now)
-    water_weight_added_in_grams = Column(Integer)
-    flour_weight_added_in_grams = Column(Integer)
+    water_weight_added_in_grams = Column(Integer, nullable=False)
+    flour_weight_added_in_grams = Column(Integer, nullable=False)
 
     def __repr__(self):
         return "<FeedingActions(date_of_action='%s', water_added_in_grams='%s', flour_added_in_grams='%s')>" % (
