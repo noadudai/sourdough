@@ -4,7 +4,7 @@ import datetime
 from sourdough.db.orm_config import Base
 
 
-class FeedingActions(Base):
+class FeedingAction(Base):
     __tablename__ = 'feeding_actions'
     id = Column(Integer, primary_key=True, nullable=False)
 
@@ -15,5 +15,5 @@ class FeedingActions(Base):
     flour_weight_added_in_grams = Column(Integer, nullable=False)
 
     def __repr__(self):
-        return "<FeedingActions(date_of_action='%s', water_added_in_grams='%s', flour_added_in_grams='%s')>" % (
+        return "<FeedingAction(date_of_action='%s', water_weight_added_in_grams='%s', flour_weight_added_in_grams='%s')>" % (
             self.date_of_action, self.water_weight_added_in_grams, self.flour_weight_added_in_grams)

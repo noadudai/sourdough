@@ -3,11 +3,11 @@ import datetime
 
 from sqlalchemy.exc import IntegrityError
 
-from sourdough.db.models.feeding_actions_table import FeedingActions
-from sourdough.db.models.leaven_extractions_table import LeavenExtractions
-from sourdough.db.models.refrigerator_actions_table import RefrigeratorActions
+from sourdough.db.models.feeding_actions_table import FeedingAction
+from sourdough.db.models.leaven_extractions_table import LeavenExtraction
+from sourdough.db.models.refrigerator_actions_table import RefrigeratorAction
 from sourdough.db.models.sourdough_table import Sourdough
-from sourdough.db.models.sourdough_targets_table import SourdoughTargets
+from sourdough.db.models.sourdough_targets_table import SourdoughTarget
 from sourdough.db.models.user_table import User
 
 
@@ -30,9 +30,9 @@ def test_for_creating_a_target_with_all_information(session):
     session.add(sourdough)
     session.commit()
     session.flush()
-    target = SourdoughTargets(sourdough_id=sourdough.id,
-                              date_of_action=datetime.date(2021, 7, 24),
-                              sourdough_weight_target_in_grams=150)
+    target = SourdoughTarget(sourdough_id=sourdough.id,
+                             date_of_action=datetime.date(2021, 7, 24),
+                             sourdough_weight_target_in_grams=150)
     session.add(target)
     session.commit()
     print(sourdough.sourdough_targets)
@@ -68,7 +68,7 @@ def test_to_add_a_leaven_extraction_action_to_db(session):
     session.add(sourdough)
     session.commit()
     session.flush()
-    leaven_instance = LeavenExtractions(sourdough_id=sourdough.id, sourdough_weight_used_in_grams=150)
+    leaven_instance = LeavenExtraction(sourdough_id=sourdough.id, sourdough_weight_used_in_grams=150)
     session.add(leaven_instance)
     session.commit()
 
@@ -82,9 +82,9 @@ def test_to_add_a_feeding_action_to_db(session):
     session.add(sourdough)
     session.commit()
     session.flush()
-    feeding_action = FeedingActions(sourdough_id=sourdough.id,
-                                    water_weight_added_in_grams=10,
-                                    flour_weight_added_in_grams=10)
+    feeding_action = FeedingAction(sourdough_id=sourdough.id,
+                                   water_weight_added_in_grams=10,
+                                   flour_weight_added_in_grams=10)
     session.add(feeding_action)
     session.commit()
 
@@ -98,7 +98,7 @@ def test_to_add_a_refrigerator_action_to_db(session):
     session.add(sourdough)
     session.commit()
     session.flush()
-    refrigerator = RefrigeratorActions(sourdough_id=sourdough.id, in_or_out="in")
+    refrigerator = RefrigeratorAction(sourdough_id=sourdough.id, in_or_out="in")
     session.add(refrigerator)
     session.commit()
 
@@ -112,16 +112,16 @@ def test_check_how_many_days_there_is_until_the_date_of_the_target_or_how_many_d
     session.add(sourdough)
     session.commit()
     session.flush()
-    target_instance = SourdoughTargets(sourdough_id=sourdough.id,
-                                       date_of_action=datetime.date(2021, 7, 6),
+    target_instance = SourdoughTarget(sourdough_id=sourdough.id,
+                                      date_of_action=datetime.date(2021, 7, 6),
+                                      sourdough_weight_target_in_grams=150)
+    target_instance2 = SourdoughTarget(sourdough_id=sourdough.id,
+                                       date_of_action=datetime.date(2021, 7, 18),
                                        sourdough_weight_target_in_grams=150)
-    target_instance2 = SourdoughTargets(sourdough_id=sourdough.id,
-                                        date_of_action=datetime.date(2021, 7, 18),
-                                        sourdough_weight_target_in_grams=150)
     session.add(target_instance)
     session.add(target_instance2)
     session.commit()
-    my_target_date = session.query(SourdoughTargets.date_of_action).filter_by(sourdough_id=sourdough.id)[-1]
+    my_target_date = session.query(SourdoughTarget.date_of_action).filter_by(sourdough_id=sourdough.id)[-1]
     today = datetime.datetime.today().date()
     target = my_target_date.date_of_action.date()
     delta = target - today
@@ -137,10 +137,10 @@ def test_if_sourdough_starter_is_in_thr_refrigerator(session):
     session.add(sourdough)
     session.commit()
     session.flush()
-    refrigerator = RefrigeratorActions(sourdough_id=sourdough.id, in_or_out="in")
+    refrigerator = RefrigeratorAction(sourdough_id=sourdough.id, in_or_out="in")
     session.add(refrigerator)
     session.commit()
-    my_refrigerator_action = session.query(RefrigeratorActions.in_or_out).filter_by(sourdough_id=sourdough.id)[-1]
+    my_refrigerator_action = session.query(RefrigeratorAction.in_or_out).filter_by(sourdough_id=sourdough.id)[-1]
     return my_refrigerator_action
 
 
@@ -153,11 +153,54 @@ def test_to_check_how_many_days_is_the_sourdough_starter_in_the_refrigerator(ses
     session.add(sourdough)
     session.commit()
     session.flush()
-    refrigerator = RefrigeratorActions(sourdough_id=sourdough.id, in_or_out="in")
+    refrigerator = RefrigeratorAction(sourdough_id=sourdough.id, in_or_out="in")
     session.add(refrigerator)
     session.commit()
-    my_refrigerator_date = session.query(RefrigeratorActions.date_of_action).filter_by(sourdough_id=sourdough.id)[-1]
+    my_refrigerator_date = session.query(RefrigeratorAction.date_of_action).filter_by(sourdough_id=sourdough.id)[-1]
     today = datetime.datetime.today().date()
     target = my_refrigerator_date.date_of_action.date()
     delta = target - today
     return delta
+
+
+def test_to_calculate_sourdough_starter_weight(session):
+    user = User(name="Noa", last_name="Dudai", email="lgek@gamil.com")
+    session.add(user)
+    session.commit()
+    session.flush()
+    sourdough = Sourdough(user_id=user.id)
+    session.add(sourdough)
+    session.commit()
+    session.flush()
+    feeding_action = FeedingAction(sourdough_id=sourdough.id,
+                                   water_weight_added_in_grams=50,
+                                   flour_weight_added_in_grams=50)
+    feeding_action2 = FeedingAction(sourdough_id=sourdough.id,
+                                    water_weight_added_in_grams=50,
+                                    flour_weight_added_in_grams=50)
+    session.add(feeding_action)
+    session.add(feeding_action2)
+    session.commit()
+    session.flush()
+    session.add(feeding_action2)
+    session.commit()
+    session.flush()
+    leaven_instance = LeavenExtraction(sourdough_id=sourdough.id, sourdough_weight_used_in_grams=150)
+    session.add(leaven_instance)
+    session.commit()
+    actions = []
+    sourdough_starter_weight = 0
+    for row in session.query(FeedingAction).filter_by(sourdough_id=sourdough.id).all():
+        actions.append(row)
+    for row in session.query(LeavenExtraction).filter_by(sourdough_id=sourdough.id).all():
+        actions.append(row)
+    for action in actions:
+        if isinstance(action, FeedingAction):
+            sourdough_starter_weight += int(action.water_weight_added_in_grams)
+            sourdough_starter_weight += int(action.flour_weight_added_in_grams)
+        else:
+            sourdough_starter_weight -= int(action.sourdough_weight_used_in_grams)
+    print(sourdough_starter_weight)
+
+
+

@@ -4,7 +4,7 @@ import datetime
 from sourdough.db.orm_config import Base
 
 
-class RefrigeratorActions(Base):
+class RefrigeratorAction(Base):
     __tablename__ = 'refrigerator_actions'
     id = Column(Integer, primary_key=True, nullable=False)
 
@@ -14,4 +14,4 @@ class RefrigeratorActions(Base):
     in_or_out = Column(String, nullable=False)
 
     def __repr__(self):
-        return "<RefrigeratorActions(date_of_action='%s', in_or_out='%s')>" % (self.date_of_action, self.in_or_out)
+        return "<RefrigeratorAction(date_of_action='%s', in_or_out='%s')>" % (self.date_of_action, self.in_or_out)

@@ -1,10 +1,10 @@
 from sqlalchemy import Column, Integer, ForeignKey
 from sqlalchemy.orm import relationship
-from sourdough.db.orm_config import Base
-from sourdough.db.models.feeding_actions_table import FeedingActions
-from sourdough.db.models.leaven_extractions_table import LeavenExtractions
-from sourdough.db.models.refrigerator_actions_table import RefrigeratorActions
-from sourdough.db.models.sourdough_targets_table import SourdoughTargets
+from sourdough.db.orm_config import Base, Session
+from sourdough.db.models.feeding_actions_table import FeedingAction
+from sourdough.db.models.leaven_extractions_table import LeavenExtraction
+from sourdough.db.models.refrigerator_actions_table import RefrigeratorAction
+from sourdough.db.models.sourdough_targets_table import SourdoughTarget
 
 
 class Sourdough(Base):
@@ -13,7 +13,23 @@ class Sourdough(Base):
 
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     user = relationship("User", back_populates="sourdoughs")
-    feeding_actions = relationship("FeedingActions", uselist=True, back_populates="sourdough")
-    leaven_extractions = relationship("LeavenExtractions", uselist=True, back_populates="sourdough")
-    refrigerator_actions = relationship("RefrigeratorActions", uselist=True, back_populates="sourdough")
-    sourdough_targets = relationship("SourdoughTargets", uselist=True, back_populates="sourdough")
+    feeding_actions = relationship("FeedingAction", uselist=True, back_populates="sourdough")
+    leaven_extractions = relationship("LeavenExtraction", uselist=True, back_populates="sourdough")
+    refrigerator_actions = relationship("RefrigeratorAction", uselist=True, back_populates="sourdough")
+    sourdough_targets = relationship("SourdoughTarget", uselist=True, back_populates="sourdough")
+
+    @property
+    def weight(self):
+        actions = []
+        sourdough_starter_weight = 0
+        for row in self.feeding_actions:
+            actions.append(row)
+        for row in self.leaven_extractions:
+            actions.append(row)
+        for action in actions:
+            if isinstance(action, FeedingAction):
+                sourdough_starter_weight += int(action.water_weight_added_in_grams)
+                sourdough_starter_weight += int(action.flour_weight_added_in_grams)
+            else:
+                sourdough_starter_weight -= int(action.sourdough_weight_used_in_grams)
+        return sourdough_starter_weight

@@ -4,7 +4,7 @@ import datetime
 from sourdough.db.orm_config import Base
 
 
-class SourdoughTargets(Base):
+class SourdoughTarget(Base):
     __tablename__ = 'sourdough_targets'
     id = Column(Integer, primary_key=True, nullable=False)
 
