@@ -1,5 +1,5 @@
 from sourdough.db.models.feeding_actions_table import FeedingAction
-from sourdough.db.models.leaven_extractions_table import LeavenExtraction
+from sourdough.db.models.extractions_table import Extraction
 from sourdough.db.models.refrigerator_actions_table import RefrigeratorAction
 from sourdough.db.models.sourdough_table import Sourdough
 from sourdough.db.models.sourdough_targets_table import SourdoughTarget
@@ -66,17 +66,17 @@ def adding_a_feeding_action():
     return "A new feeding action added"
 
 
-@app.route('/add_a_leaven_extraction')
-def adding_a_leaven_extraction():
+@app.route('/add_extraction')
+def adding_extraction():
     user_email = request.args.get('email')
     sourdough_weight = request.args.get('sourdough_weight_used_in_grams')
     session = Session()
     user_id = session.query(User.id).filter_by(email=user_email).one()
-    my_leaven_extraction = LeavenExtraction(sourdough_id=user_id.id,
-                                            sourdough_weight_used_in_grams=int(sourdough_weight))
-    session.add(my_leaven_extraction)
+    my_extraction = Extraction(sourdough_id=user_id.id,
+                               sourdough_weight_used_in_grams=int(sourdough_weight))
+    session.add(my_extraction)
     session.commit()
-    return "A new leaven extraction added"
+    return "A new extraction added"
 
 
 @app.route('/add_a_refrigerator_action')
@@ -89,6 +89,16 @@ def adding_a_refrigerator_action():
     session.add(my_refrigerator_action)
     session.commit()
     return "A new refrigerator action added"
+
+
+@app.route('/my_sourdough_starter_weight')
+def my_sourdough_starter_weight():
+    user_email = request.args.get('email')
+    session = Session()
+    my_user = session.query(User.id).filter_by(email=user_email).one()
+    my_sourdough = session.query(Sourdough).filter_by(user_id=my_user.id).one()
+    my_weight = my_sourdough.weight
+    return jsonify(my_weight)
 
 
 # Base.metadata.create_all(engine)

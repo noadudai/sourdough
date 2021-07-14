@@ -4,7 +4,7 @@ import datetime
 from sqlalchemy.exc import IntegrityError
 
 from sourdough.db.models.feeding_actions_table import FeedingAction
-from sourdough.db.models.leaven_extractions_table import LeavenExtraction
+from sourdough.db.models.extractions_table import Extraction
 from sourdough.db.models.refrigerator_actions_table import RefrigeratorAction
 from sourdough.db.models.sourdough_table import Sourdough
 from sourdough.db.models.sourdough_targets_table import SourdoughTarget
@@ -59,7 +59,7 @@ def test_raise_error_if_an_email_is_not_provided(session):
         session.commit()
 
 
-def test_to_add_a_leaven_extraction_action_to_db(session):
+def test_to_add_extraction_action_to_db(session):
     user = User(name="Noa", last_name="Dudai", email="lgek@gamil.com")
     session.add(user)
     session.commit()
@@ -68,8 +68,8 @@ def test_to_add_a_leaven_extraction_action_to_db(session):
     session.add(sourdough)
     session.commit()
     session.flush()
-    leaven_instance = LeavenExtraction(sourdough_id=sourdough.id, sourdough_weight_used_in_grams=150)
-    session.add(leaven_instance)
+    extraction_instance = Extraction(sourdough_id=sourdough.id, sourdough_weight_used_in_grams=150)
+    session.add(extraction_instance)
     session.commit()
 
 
@@ -128,7 +128,7 @@ def test_check_how_many_days_there_is_until_the_date_of_the_target_or_how_many_d
     return delta
 
 
-def test_if_sourdough_starter_is_in_thr_refrigerator(session):
+def test_if_sourdough_starter_is_in_the_refrigerator(session):
     user = User(name="Noa", last_name="Dudai", email="lgek@gamil.com")
     session.add(user)
     session.commit()
@@ -185,14 +185,14 @@ def test_to_calculate_sourdough_starter_weight(session):
     session.add(feeding_action2)
     session.commit()
     session.flush()
-    leaven_instance = LeavenExtraction(sourdough_id=sourdough.id, sourdough_weight_used_in_grams=150)
-    session.add(leaven_instance)
+    extraction_instance = Extraction(sourdough_id=sourdough.id, sourdough_weight_used_in_grams=150)
+    session.add(extraction_instance)
     session.commit()
     actions = []
     sourdough_starter_weight = 0
     for row in session.query(FeedingAction).filter_by(sourdough_id=sourdough.id).all():
         actions.append(row)
-    for row in session.query(LeavenExtraction).filter_by(sourdough_id=sourdough.id).all():
+    for row in session.query(Extraction).filter_by(sourdough_id=sourdough.id).all():
         actions.append(row)
     for action in actions:
         if isinstance(action, FeedingAction):
