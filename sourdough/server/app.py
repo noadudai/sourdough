@@ -101,4 +101,42 @@ def my_sourdough_starter_weight():
     return jsonify(my_weight)
 
 
+@app.route('/my_action_today')
+def my_action_today():
+    user_email = request.args.get('email')
+    session = Session()
+    my_user = session.query(User.id).filter_by(email=user_email).one()
+    my_sourdough = session.query(Sourdough).filter_by(user_id=my_user.id).one()
+    delta_target = my_sourdough.days_until_target
+    delta_refrigerator = my_sourdough.days_in_refrigerator
+    target_weight = session.query(SourdoughTarget.sourdough_weight_target_in_grams).filter_by(sourdough_id=my_sourdough.id)[-1]
+    if delta_target < 0:
+        if delta_refrigerator == 10:
+            if my_sourdough.weight < my_sourdough.max_maintenance_weight:
+                return my_sourdough.is_over_maintenance_weight
+        elif 9 < delta_refrigerator > 1:
+            action = {"days in": str(delta_refrigerator), "days until out": str(delta_refrigerator-10)}
+            return jsonify(action)
+        else:
+            raise Exception("The sourdough starter is in the refrigerator more than the max 10 days!.")
+    elif delta_target == 0:
+        action = {"action1": "feed " + str((target_weight.sourdough_weight_target_in_grams / 3)-4) + "grams flour and water",
+                  "action2": "extraction target " + str(target_weight.sourdough_weight_target_in_grams-4) + "grams",
+                  "action3": "refrigerator in"}
+        return jsonify(action)
+    elif 0 < delta_target <= 2:
+        action = {"action": "feed " + str(my_sourdough.weight) + "grams flour and water"}
+        return jsonify(action)
+    elif delta_target == 3:
+        action = {"action1": "refrigerator out",
+                  "action2": "extract " + str(my_sourdough.weight - 2) + "grams",
+                  "action3": "feed 2grams flour and 2grams water"}
+        return jsonify(action)
+    elif 9 < delta_target > 3:
+        action = {"days in": str(delta_refrigerator), "days until out": str(delta_target-3)}
+        return jsonify(action)
+    elif delta_target >= 10:
+        return jsonify(my_sourdough.is_over_maintenance_weight)
+
+
 # Base.metadata.create_all(engine)
