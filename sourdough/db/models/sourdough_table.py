@@ -38,10 +38,10 @@ class Sourdough(Base):
 
     @property
     def days_in_refrigerator(self):
-        my_refrigerator_date = self.refrigerator_actions
+        my_refrigerator = self.refrigerator_actions
         today = datetime.datetime.today().date()
-        target = my_refrigerator_date[-1].date_of_action.date()
-        delta = target - today
+        refrigerator_date = my_refrigerator[-1].date_of_action.date()
+        delta = refrigerator_date - today
         return delta.days
 
     @property

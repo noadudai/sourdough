@@ -1,9 +1,9 @@
 from sourdough.db.models.sourdough_table import Sourdough
-from sourdough.db.models.sourdough_targets_table import SourdoughTargets
+from sourdough.db.models.sourdough_targets_table import SourdoughTarget
 from sourdough.db.models.user_table import User
-from sourdough.db.models.feeding_actions_table import FeedingActions
-from sourdough.db.models.leaven_extractions_table import LeavenExtractions
-from sourdough.db.models.refrigerator_actions_table import RefrigeratorActions
+from sourdough.db.models.feeding_actions_table import FeedingAction
+from sourdough.db.models.extractions_table import Extraction
+from sourdough.db.models.refrigerator_actions_table import RefrigeratorAction
 from sourdough.db.orm_config import Base, engine, Session
 from flask import Flask, request, jsonify
 import datetime
@@ -35,16 +35,16 @@ def show_all_users():
     return jsonify(return_str)
 
 
-@app.route('/add_a_feeding_action', methods=['GET', 'POST'])
+@app.route('/add_a_feeding_action')
 def adding_a_feeding_action():
     user_email = request.args.get('email')
     water_weight = request.args.get('water_weight_added_in_grams')
     flour_weight = request.args.get('flour_weight_added_in_grams')
     session = Session()
     user_id = session.query(User.id).filter_by(email=user_email).one()
-    my_feeding_action = FeedingActions(sourdough_id=user_id.id,
-                                       water_weight_added_in_grams=int(water_weight),
-                                       flour_weight_added_in_grams=int(flour_weight))
+    my_feeding_action = FeedingAction(sourdough_id=user_id.id,
+                                      water_weight_added_in_grams=int(water_weight),
+                                      flour_weight_added_in_grams=int(flour_weight))
     session.add(my_feeding_action)
     session.commit()
     return "A new feeding action added"
@@ -55,28 +55,28 @@ def adding_a_sourdough_target():
     user_email = request.args.get('email')
     date_of_action = request.args.get('date_of_action')
     date = datetime.datetime.strptime(date_of_action, '%Y-%m-%d')
-    sourdough_weight = request.args.get('sourdough_weight_target_in_grams')
+    sourdough_weight_target = request.args.get('sourdough_weight_target_in_grams')
     session = Session()
     my_user = session.query(User.id).filter_by(email=user_email).one()
-    my_target = SourdoughTargets(sourdough_id=my_user.id,
-                                 date_of_action=date,
-                                 sourdough_weight_target_in_grams=int(sourdough_weight))
+    my_target = SourdoughTarget(sourdough_id=my_user.id,
+                                date_of_action=date,
+                                sourdough_weight_target_in_grams=int(sourdough_weight_target))
     session.add(my_target)
     session.commit()
     return "A new target created"
 
 
-@app.route('/add_a_leaven_extraction')
-def adding_a_leaven_extraction():
+@app.route('/add_extraction')
+def adding_extraction():
     user_email = request.args.get('email')
-    sourdough_weight = request.args.get('sourdough_weight_used_in_grams')
+    sourdough_weight_extracted = request.args.get('sourdough_weight_used_in_grams')
     session = Session()
     user_id = session.query(User.id).filter_by(email=user_email).one()
-    my_leaven_extraction = LeavenExtractions(sourdough_id=user_id.id,
-                                             sourdough_weight_used_in_grams=int(sourdough_weight))
-    session.add(my_leaven_extraction)
+    my_extraction = Extraction(sourdough_id=user_id.id,
+                               sourdough_weight_used_in_grams=int(sourdough_weight_extracted))
+    session.add(my_extraction)
     session.commit()
-    return "A new leaven extraction added"
+    return "A new extraction added"
 
 
 @app.route('/add_a_refrigerator_action')
@@ -85,38 +85,60 @@ def adding_a_refrigerator_action():
     in_or_out = request.args.get('in_or_out')
     session = Session()
     user_id = session.query(User.id).filter_by(email=user_email).one()
-    my_refrigerator_action = RefrigeratorActions(sourdough_id=user_id.id, in_or_out=in_or_out)
+    my_refrigerator_action = RefrigeratorAction(sourdough_id=user_id.id, in_or_out=in_or_out)
     session.add(my_refrigerator_action)
     session.commit()
     return "A new refrigerator action added"
 
 
-# @app.route('/my_action_today')
-def my_action_today(email):
-    # user_email = request.args.get('email')
-    user_email = email
+@app.route('/my_action_today')
+def my_action_today():
+    user_email = request.args.get('email')
     session = Session()
     my_user = session.query(User.id).filter_by(email=user_email).one()
-    my_target_date = session.query(SourdoughTargets.date_of_action).filter_by(sourdough_id=my_user.id)[-1]
-    # my_refrigerator_state = session.query(RefrigeratorActions.in_or_out).filter_by(sourdough_id=my_user.id)[-1]
-    # refrigerator_state = my_refrigerator_state.in_or_out
-    # refrigerator_day = my_refrigerator_state.date_of_action
-    today = datetime.datetime.today().date()
-    target = my_target_date.date_of_action
-    # refrigerator_date = datetime.date(int(refrigerator_day.year), int(refrigerator_day.month), int(refrigerator_day.day))
-    delta = target - today
-    if delta.days > 3:
-        return "the target is in more then 3 days, its in " + str(delta.days) + " days."
-    elif 3 >= delta.days > 0:
-        return "the target is " + str(delta.days) + " days"
-    else:
-        return "the target has passed!"
+    my_sourdough = session.query(Sourdough).filter_by(user_id=my_user.id).one()
+    delta_target = my_sourdough.days_until_target
+    delta_refrigerator = my_sourdough.days_in_refrigerator
+    target_weight = session.query(SourdoughTarget.sourdough_weight_target_in_grams).filter_by(sourdough_id=my_sourdough.id)[-1]
+    if delta_target < 0:
+        if delta_refrigerator == 10:
+            if my_sourdough.weight < my_sourdough.max_maintenance_weight:
+                return my_sourdough.is_over_maintenance_weight
+        elif 9 < delta_refrigerator > 1:
+            action = {"days in": str(delta_refrigerator), "days until out": str(delta_refrigerator-10)}
+            return jsonify(action)
+        else:
+            raise Exception("The sourdough starter is in the refrigerator more than the max 10 days!.")
+    elif delta_target == 0:
+        action = {"action1": "feed " + str((target_weight.sourdough_weight_target_in_grams / 3)-4) + "grams flour and water",
+                  "action2": "extraction target " + str(target_weight.sourdough_weight_target_in_grams-4) + "grams",
+                  "action3": "refrigerator in"}
+        return jsonify(action)
+    elif 0 < delta_target <= 2:
+        action = {"action": "feed " + str(my_sourdough.weight) + "grams flour and water"}
+        return jsonify(action)
+    elif delta_target == 3:
+        action = {"action1": "refrigerator out",
+                  "action2": "extract " + str(my_sourdough.weight - 2) + "grams",
+                  "action3": "feed 2grams flour and 2grams water"}
+        return jsonify(action)
+    elif 9 < delta_target > 3:
+        action = {"days in": str(delta_refrigerator), "days until out": str(delta_target-3)}
+        return jsonify(action)
+    elif delta_target >= 10:
+        return jsonify(my_sourdough.is_over_maintenance_weight)
 
 
-print(my_action_today("peepsylu@gmail.com"))
-# Base.metadata.create_all(engine)
+@app.route('/my_sourdough_starter_weight')
+def my_sourdough_starter_weight():
+    user_email = request.args.get('email')
+    session = Session()
+    my_user = session.query(User.id).filter_by(email=user_email).one()
+    my_sourdough = session.query(Sourdough).filter_by(user_id=my_user.id).one()
+    my_weight = my_sourdough.weight
+    return jsonify(my_weight)
 
 
 if __name__ == '__main__':
+    Base.metadata.create_all(engine)
     app.run()
-
