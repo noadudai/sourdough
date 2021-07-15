@@ -9,6 +9,7 @@ from sourdough.db.models.refrigerator_actions_table import RefrigeratorAction
 from sourdough.db.models.sourdough_table import Sourdough
 from sourdough.db.models.sourdough_targets_table import SourdoughTarget
 from sourdough.db.models.user_table import User
+import json
 
 
 def test_create_a_user_and_a_sourdough_in_db(session):
@@ -197,27 +198,31 @@ def test_action_today(session):
     if delta_target < 0:
         if delta_refrigerator == 10:
             if sourdough.weight < sourdough.max_maintenance_weight:
-                return sourdough.is_over_maintenance_weight
+                print(json.dumps(sourdough.is_over_maintenance_weight))
         elif 9 < delta_refrigerator > 1:
-            action = {"days in": str(delta_refrigerator), "days until out": str(delta_refrigerator-10)}
-            print(action)
+            action = {"actions to perform": {"days in": str(delta_refrigerator)+ "days in the refrigerator",
+                                             "refrigerator action": "days in for" + str(delta_refrigerator-10) + " days"}}
+            print(json.dumps(action))
         else:
             raise Exception("The sourdough starter is in the refrigerator more than the max 10 days!.")
     elif delta_target == 0:
-        action = {"action1": "feed " + str((target_weight.sourdough_weight_target_in_grams / 3)-4) + "grams flour and water",
-                  "action2": "extraction target " + str(target_weight.sourdough_weight_target_in_grams-4) + "grams",
-                  "action3": "refrigerator in"}
-        print(action)
+        action = {"actions to perform": {"feeding action":
+                                             {"water": str((target_weight.sourdough_weight_target_in_grams / 3)-4),
+                                              "flour": str((target_weight.sourdough_weight_target_in_grams / 3)-4)},
+                                         "extraction action": {"extract": str(target_weight.sourdough_weight_target_in_grams-4)},
+                                         "refrigerator action": "in"}}
+        print(json.dumps(action))
     elif 0 < delta_target <= 2:
-        action = {"action": "feed " + str(sourdough.weight) + "grams flour and water"}
-        print(action)
+        action = {"actions to perform": {"feeding action": {"water": str(sourdough.weight), "flour": str(sourdough.weight)}}}
+        print(json.dumps(action))
     elif delta_target == 3:
-        action = {"action1": "refrigerator out",
-                  "action2": "extract " + str(sourdough.weight - 2) + "grams",
-                  "action3": "feed 2grams flour and 2grams water"}
-        print(action)
+        action = {"actions to preform": {"refrigerator action": "out",
+                                         "extraction action": {"extract": str(sourdough.weight - 2)},
+                                         "feeding action": {"water": "2", "flour": "2"}}}
+        print(json.dumps(action))
     elif 9 < delta_target > 3:
-        action = {"days in": str(delta_refrigerator), "days until out": str(delta_target-3)}
-        print(action)
+        action = {"actions to preform": {"days in": str(delta_refrigerator) + "days in the refrigerator",
+                                         "refrigerator action": "in for " + str(delta_target-3) + " days"}}
+        print(json.dumps(action))
     elif delta_target >= 10:
-        return sourdough.is_over_maintenance_weight
+        print(json.dumps(sourdough.is_over_maintenance_weight))

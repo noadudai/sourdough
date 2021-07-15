@@ -7,6 +7,7 @@ from sourdough.db.models.refrigerator_actions_table import RefrigeratorAction
 from sourdough.db.orm_config import Base, engine, Session
 from flask import Flask, request, jsonify
 import datetime
+import json
 
 app = Flask(__name__)
 
@@ -23,7 +24,7 @@ def create_account():
     my_sourdough = Sourdough(user_id=my_user.id)
     session.add(my_sourdough)
     session.commit()
-    return "created"
+    return json.dumps({"action performed": "create account action"})
 
 
 @app.route('/show_all_users')
@@ -47,7 +48,7 @@ def adding_a_feeding_action():
                                       flour_weight_added_in_grams=int(flour_weight))
     session.add(my_feeding_action)
     session.commit()
-    return "A new feeding action added"
+    return json.dumps({"action performed": "feeding action"})
 
 
 @app.route('/add_a_target')
@@ -63,7 +64,7 @@ def adding_a_sourdough_target():
                                 sourdough_weight_target_in_grams=int(sourdough_weight_target))
     session.add(my_target)
     session.commit()
-    return "A new target created"
+    return json.dumps({"action performed": "sourdough target action"})
 
 
 @app.route('/add_extraction')
@@ -76,7 +77,7 @@ def adding_extraction():
                                sourdough_weight_used_in_grams=int(sourdough_weight_extracted))
     session.add(my_extraction)
     session.commit()
-    return "A new extraction added"
+    return json.dumps({"action performed": "extraction action"})
 
 
 @app.route('/add_a_refrigerator_action')
@@ -88,7 +89,7 @@ def adding_a_refrigerator_action():
     my_refrigerator_action = RefrigeratorAction(sourdough_id=user_id.id, in_or_out=in_or_out)
     session.add(my_refrigerator_action)
     session.commit()
-    return "A new refrigerator action added"
+    return json.dumps({"action performed": "refrigerator action"})
 
 
 @app.route('/my_action_today')
@@ -103,30 +104,36 @@ def my_action_today():
     if delta_target < 0:
         if delta_refrigerator == 10:
             if my_sourdough.weight < my_sourdough.max_maintenance_weight:
-                return my_sourdough.is_over_maintenance_weight
+                return json.dumps(my_sourdough.is_over_maintenance_weight)
         elif 9 < delta_refrigerator > 1:
-            action = {"days in": str(delta_refrigerator), "days until out": str(delta_refrigerator-10)}
-            return jsonify(action)
+            action = {"actions to perform": {"days in": str(delta_refrigerator) + "days in the refrigerator",
+                                             "refrigerator action": "days in for" + str(
+                                                 delta_refrigerator - 10) + " days"}}
+            return json.dumps(action)
         else:
             raise Exception("The sourdough starter is in the refrigerator more than the max 10 days!.")
     elif delta_target == 0:
-        action = {"action1": "feed " + str((target_weight.sourdough_weight_target_in_grams / 3)-4) + "grams flour and water",
-                  "action2": "extraction target " + str(target_weight.sourdough_weight_target_in_grams-4) + "grams",
-                  "action3": "refrigerator in"}
-        return jsonify(action)
+        action = {"actions to perform": {"feeding action":
+                                             {"water": str((target_weight.sourdough_weight_target_in_grams / 3) - 4),
+                                              "flour": str((target_weight.sourdough_weight_target_in_grams / 3) - 4)},
+                                         "extraction action": {
+                                             "extract": str(target_weight.sourdough_weight_target_in_grams - 4)},
+                                         "refrigerator action": "in"}}
+        return json.dumps(action)
     elif 0 < delta_target <= 2:
-        action = {"action": "feed " + str(my_sourdough.weight) + "grams flour and water"}
-        return jsonify(action)
+        action = {"actions to perform": {"feeding action": {"water": str(my_sourdough.weight), "flour": str(my_sourdough.weight)}}}
+        return json.dumps(action)
     elif delta_target == 3:
-        action = {"action1": "refrigerator out",
-                  "action2": "extract " + str(my_sourdough.weight - 2) + "grams",
-                  "action3": "feed 2grams flour and 2grams water"}
-        return jsonify(action)
+        action = {"actions to preform": {"refrigerator action": "out",
+                                         "extraction action": {"extract": str(my_sourdough.weight - 2)},
+                                         "feeding action": {"water": "2", "flour": "2"}}}
+        return json.dumps(action)
     elif 9 < delta_target > 3:
-        action = {"days in": str(delta_refrigerator), "days until out": str(delta_target-3)}
-        return jsonify(action)
+        action = {"actions to preform": {"days in": str(delta_refrigerator) + "days in the refrigerator",
+                                         "refrigerator action": "in for " + str(delta_target - 3) + " days"}}
+        return json.dumps(action)
     elif delta_target >= 10:
-        return jsonify(my_sourdough.is_over_maintenance_weight)
+        return json.dumps(my_sourdough.is_over_maintenance_weight)
 
 
 @app.route('/my_sourdough_starter_weight')
@@ -136,7 +143,7 @@ def my_sourdough_starter_weight():
     my_user = session.query(User.id).filter_by(email=user_email).one()
     my_sourdough = session.query(Sourdough).filter_by(user_id=my_user.id).one()
     my_weight = my_sourdough.weight
-    return jsonify(my_weight)
+    return json.dumps(my_weight)
 
 
 if __name__ == '__main__':

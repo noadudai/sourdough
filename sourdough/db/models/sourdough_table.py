@@ -60,14 +60,14 @@ class Sourdough(Base):
     @property
     def is_over_maintenance_weight(self):
         if self.weight < self.max_maintenance_weight:
-            action = {"days": str(self.days_in_refrigerator),
-                      "action1": "refrigerator out",
-                      "action2": "feed " + str(self.weight) + "grams flour and " + str(self.weight) + "grams water",
-                      "action3": "refrigerator in"}
+            action = {"actions to preform": {"days": str(self.days_in_refrigerator) + " days in the refrigerator",
+                                             "refrigerator action 1": "out",
+                                             "feeding action": {"water": str(self.weight), "flour": str(self.weight)},
+                                             "refrigerator action 2": "in"}}
             return action
         else:
-            action = {"days": str(self.days_in_refrigerator),
-                      "action1": "refrigerator out",
-                      "action2": "extract " + str(self.weight - 4) + "gram",
-                      "action3": "refrigerator in"}
+            action = {"actions to preform": {"days": str(self.days_in_refrigerator) + " days in the refrigerator",
+                                             "refrigerator action": "out",
+                                             "extraction action": {"extract ": str(self.weight - 4)},
+                                             "refrigerator action 2": "in"}}
             return action
