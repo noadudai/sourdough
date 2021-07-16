@@ -1,11 +1,13 @@
 from sqlalchemy import Column, Integer, ForeignKey
 from sqlalchemy.orm import relationship
 from sourdough.db.orm_config import Base, Session
-from sourdough.db.models.feeding_actions_table import FeedingAction
-from sourdough.db.models.extractions_table import Extraction
-from sourdough.db.models.refrigerator_actions_table import RefrigeratorAction
-from sourdough.db.models.sourdough_targets_table import SourdoughTarget
+from sourdough.db.models.feeding_actions_table import FeedingActionModel
+from sourdough.db.models.extractions_table import ExtractionModel
+from sourdough.db.models.refrigerator_actions_table import RefrigeratorActionModel
+from sourdough.db.models.sourdough_targets_table import SourdoughTargetModel
 import datetime
+from sourdough.server.actions import RefrigerationAction, FeedingAction, ExtractionAction
+from sourdough.server.messages import PerformActionsMessage, ActionsPerformedMessage
 
 
 class Sourdough(Base):
@@ -14,11 +16,11 @@ class Sourdough(Base):
     max_maintenance_weight = Column(Integer, default=100)
 
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    user = relationship("User", back_populates="sourdoughs")
-    feeding_actions = relationship("FeedingAction", uselist=True, back_populates="sourdough")
-    extractions = relationship("Extraction", uselist=True, back_populates="sourdough")
-    refrigerator_actions = relationship("RefrigeratorAction", uselist=True, back_populates="sourdough")
-    sourdough_targets = relationship("SourdoughTarget", uselist=True, back_populates="sourdough")
+    user = relationship("UserModel", back_populates="sourdoughs")
+    feeding_actions = relationship("FeedingActionModel", uselist=True, back_populates="sourdough")
+    extractions = relationship("ExtractionModel", uselist=True, back_populates="sourdough")
+    refrigerator_actions = relationship("RefrigeratorActionModel", uselist=True, back_populates="sourdough")
+    sourdough_targets = relationship("SourdoughTargetModel", uselist=True, back_populates="sourdough")
 
     @property
     def weight(self):
@@ -29,7 +31,7 @@ class Sourdough(Base):
         for row in self.extractions:
             actions.append(row)
         for action in actions:
-            if isinstance(action, FeedingAction):
+            if isinstance(action, FeedingActionModel):
                 sourdough_starter_weight += int(action.water_weight_added_in_grams)
                 sourdough_starter_weight += int(action.flour_weight_added_in_grams)
             else:
@@ -60,14 +62,17 @@ class Sourdough(Base):
     @property
     def is_over_maintenance_weight(self):
         if self.weight < self.max_maintenance_weight:
-            action = {"actions to preform": {"days": str(self.days_in_refrigerator) + " days in the refrigerator",
-                                             "refrigerator action 1": "out",
-                                             "feeding action": {"water": str(self.weight), "flour": str(self.weight)},
-                                             "refrigerator action 2": "in"}}
-            return action
+            refrigerator_action = RefrigerationAction("out")
+            feeding_action = FeedingAction(str(self.weight), str(self.weight))
+            refrigerator_action2 = RefrigerationAction("in")
+            actions = [refrigerator_action, feeding_action, refrigerator_action2]
+            message = PerformActionsMessage(actions)
+            return message.to_dict()
         else:
-            action = {"actions to preform": {"days": str(self.days_in_refrigerator) + " days in the refrigerator",
-                                             "refrigerator action": "out",
-                                             "extraction action": {"extract ": str(self.weight - 4)},
-                                             "refrigerator action 2": "in"}}
-            return action
+            refrigerator_action = RefrigerationAction("out")
+            extraction_action = ExtractionAction(str(self.weight - 4))
+            refrigerator_action2 = RefrigerationAction("in")
+            actions = [refrigerator_action, extraction_action, refrigerator_action2]
+            message = PerformActionsMessage(actions)
+            return message.to_dict()
+
