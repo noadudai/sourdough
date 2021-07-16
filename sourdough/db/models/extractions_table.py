@@ -9,7 +9,7 @@ class ExtractionModel(Base):
     id = Column(Integer, primary_key=True, nullable=False)
 
     sourdough_id = Column(Integer, ForeignKey('sourdough_starters.id'), nullable=False)
-    sourdough = relationship("Sourdough", back_populates="extractions")
+    sourdough = relationship("SourdoughModel", back_populates="extractions")
     date_of_action = Column(DateTime, default=datetime.datetime.now)
     sourdough_weight_used_in_grams = Column(Integer, nullable=False)
 

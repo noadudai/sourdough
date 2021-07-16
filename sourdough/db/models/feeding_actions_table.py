@@ -9,7 +9,7 @@ class FeedingActionModel(Base):
     id = Column(Integer, primary_key=True, nullable=False)
 
     sourdough_id = Column(Integer, ForeignKey('sourdough_starters.id'), nullable=False)
-    sourdough = relationship("Sourdough", back_populates="feeding_actions")
+    sourdough = relationship("SourdoughModel", back_populates="feeding_actions")
     date_of_action = Column(DateTime, default=datetime.datetime.now)
     water_weight_added_in_grams = Column(Integer, nullable=False)
     flour_weight_added_in_grams = Column(Integer, nullable=False)

@@ -10,7 +10,7 @@ from sourdough.server.actions import RefrigerationAction, FeedingAction, Extract
 from sourdough.server.messages import PerformActionsMessage, ActionsPerformedMessage
 
 
-class Sourdough(Base):
+class SourdoughModel(Base):
     __tablename__ = 'sourdough_starters'
     id = Column(Integer, primary_key=True, nullable=False)
     max_maintenance_weight = Column(Integer, default=100)

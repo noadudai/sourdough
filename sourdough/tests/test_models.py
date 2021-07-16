@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sourdough.db.models.feeding_actions_table import FeedingActionModel
 from sourdough.db.models.extractions_table import ExtractionModel
 from sourdough.db.models.refrigerator_actions_table import RefrigeratorActionModel
-from sourdough.db.models.sourdough_table import Sourdough
+from sourdough.db.models.sourdough_table import SourdoughModel
 from sourdough.db.models.sourdough_targets_table import SourdoughTargetModel
 from sourdough.db.models.user_table import UserModel
 import json
@@ -20,7 +20,7 @@ def test_create_a_user_and_a_sourdough_in_db(session):
     session.add(user)
     session.commit()
     session.flush()
-    sourdough = Sourdough(user_id=user.id)
+    sourdough = SourdoughModel(user_id=user.id)
     session.add(sourdough)
     session.commit()
 
@@ -30,7 +30,7 @@ def test_for_creating_a_target_with_all_information(session):
     session.add(user)
     session.commit()
     session.flush()
-    sourdough = Sourdough(user_id=user.id)
+    sourdough = SourdoughModel(user_id=user.id)
     session.add(sourdough)
     session.commit()
     session.flush()
@@ -68,7 +68,7 @@ def test_to_add_extraction_action_to_db(session):
     session.add(user)
     session.commit()
     session.flush()
-    sourdough = Sourdough(user_id=user.id)
+    sourdough = SourdoughModel(user_id=user.id)
     session.add(sourdough)
     session.commit()
     session.flush()
@@ -82,7 +82,7 @@ def test_to_add_a_feeding_action_to_db(session):
     session.add(user)
     session.commit()
     session.flush()
-    sourdough = Sourdough(user_id=user.id)
+    sourdough = SourdoughModel(user_id=user.id)
     session.add(sourdough)
     session.commit()
     session.flush()
@@ -98,7 +98,7 @@ def test_to_add_a_refrigerator_action_to_db(session):
     session.add(user)
     session.commit()
     session.flush()
-    sourdough = Sourdough(user_id=user.id)
+    sourdough = SourdoughModel(user_id=user.id)
     session.add(sourdough)
     session.commit()
     session.flush()
@@ -112,7 +112,7 @@ def test_check_how_many_days_there_is_until_the_date_of_the_target_or_how_many_d
     session.add(user)
     session.commit()
     session.flush()
-    sourdough = Sourdough(user_id=user.id)
+    sourdough = SourdoughModel(user_id=user.id)
     session.add(sourdough)
     session.commit()
     session.flush()
@@ -137,7 +137,7 @@ def test_if_sourdough_starter_is_in_the_refrigerator(session):
     session.add(user)
     session.commit()
     session.flush()
-    sourdough = Sourdough(user_id=user.id)
+    sourdough = SourdoughModel(user_id=user.id)
     session.add(sourdough)
     session.commit()
     session.flush()
@@ -153,7 +153,7 @@ def test_to_check_how_many_days_is_the_sourdough_starter_in_the_refrigerator(ses
     session.add(user)
     session.commit()
     session.flush()
-    sourdough = Sourdough(user_id=user.id)
+    sourdough = SourdoughModel(user_id=user.id)
     session.add(sourdough)
     session.commit()
     session.flush()
@@ -172,7 +172,7 @@ def test_action_today(session):
     session.add(user)
     session.commit()
     session.flush()
-    sourdough = Sourdough(user_id=user.id)
+    sourdough = SourdoughModel(user_id=user.id)
     session.add(sourdough)
     session.commit()
     session.flush()

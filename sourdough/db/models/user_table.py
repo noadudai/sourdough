@@ -11,7 +11,7 @@ class UserModel(Base):
     name = Column(String, nullable=False)
     last_name = Column(String, nullable=False)
     email = Column(String, nullable=False)
-    sourdoughs = relationship("Sourdough", uselist=True, back_populates="user")
+    sourdoughs = relationship("SourdoughModel", uselist=True, back_populates="user")
 
     def __repr__(self):
         return "<UserModel(name='%s', last_name='%s', email='%s')>" % (

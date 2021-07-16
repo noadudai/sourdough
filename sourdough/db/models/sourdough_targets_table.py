@@ -9,7 +9,7 @@ class SourdoughTargetModel(Base):
     id = Column(Integer, primary_key=True, nullable=False)
 
     sourdough_id = Column(Integer, ForeignKey('sourdough_starters.id'), nullable=False)
-    sourdough = relationship("Sourdough", back_populates="sourdough_targets")
+    sourdough = relationship("SourdoughModel", back_populates="sourdough_targets")
     date_of_action = Column(DateTime, nullable=False)
     sourdough_weight_target_in_grams = Column(Integer, nullable=False)
 
