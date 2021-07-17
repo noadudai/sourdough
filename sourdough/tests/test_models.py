@@ -11,7 +11,7 @@ from sourdough.db.models.sourdough_targets_table import SourdoughTargetModel
 from sourdough.db.models.user_table import UserModel
 import json
 
-from sourdough.server.actions import RefrigerationAction, FeedingAction, ExtractionAction
+from sourdough.server.actions import RefrigerationAction, FeedingAction, ExtractionAction, TargetAction
 from sourdough.server.messages import PerformActionsMessage, ActionsPerformedMessage
 
 
@@ -167,7 +167,7 @@ def test_to_check_how_many_days_is_the_sourdough_starter_in_the_refrigerator(ses
     return delta.days
 
 
-def test_action_today(session):
+def test_action_today_function(session):
     user = UserModel(name="Noa", last_name="Dudai", email="lgek@gamil.com")
     session.add(user)
     session.commit()
@@ -234,3 +234,34 @@ def test_action_today(session):
         print(json.dumps(message.to_dict()))
     elif delta_target >= 10:
         print(json.dumps(sourdough.is_over_maintenance_weight))
+
+
+def test_feeding_action_serialization():
+    feeding_action = FeedingAction("50", "50")
+    message = ActionsPerformedMessage([feeding_action])
+    json_message = json.dumps(message.to_dict())
+    load_feeding_action = json.loads(json_message)
+    action = ActionsPerformedMessage.from_dict(load_feeding_action)
+    print(action)
+
+
+def test_target_action_serialization():
+    today = datetime.datetime.today().date()
+    target_action = TargetAction(today, "150")
+    message = ActionsPerformedMessage([target_action])
+    json_message = json.dumps(message.to_dict())
+    load_json = json.loads(json_message)
+    action = ActionsPerformedMessage.from_dict(load_json)
+    print(action)
+
+
+def test_action_to_perform_serialization_deserialize():
+    today = datetime.datetime.today().date()
+    target_action = TargetAction(today, "150")
+    feeding_action = FeedingAction("50", "50")
+    message = ActionsPerformedMessage([target_action, feeding_action])
+    json_message = json.dumps(message.to_dict())
+    print(json_message)
+    load_json = json.loads(json_message)
+    action = ActionsPerformedMessage.from_dict(load_json)
+    print(action)

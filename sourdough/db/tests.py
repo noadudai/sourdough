@@ -8,6 +8,7 @@ from sourdough.db.orm_config import Base, engine, Session
 from flask import Flask, request, jsonify
 import datetime
 import json
+import requests
 
 from sourdough.server.actions import TargetAction, FeedingAction, ExtractionAction, RefrigerationAction
 from sourdough.server.messages import ActionsPerformedMessage, PerformActionsMessage
@@ -111,8 +112,11 @@ def my_action_today():
     my_sourdough_model = session.query(SourdoughModel).filter_by(user_id=my_user_model.id).one()
     delta_target = my_sourdough_model.days_until_target
     delta_refrigerator = my_sourdough_model.days_in_refrigerator
-    target_weight = session.query(SourdoughTargetModel.sourdough_weight_target_in_grams).filter_by(sourdough_id=my_sourdough_model.id)[-1]
-    refrigerator_state_model = session.query(RefrigeratorActionModel.in_or_out).filter_by(sourdough_id=my_sourdough_model.id)[-1]
+    target_weight = session.query(
+                    SourdoughTargetModel.sourdough_weight_target_in_grams
+                    ).filter_by(sourdough_id=my_sourdough_model.id)[-1]
+    refrigerator_state_model = session.query(
+                               RefrigeratorActionModel.in_or_out).filter_by(sourdough_id=my_sourdough_model.id)[-1]
     if delta_target < 0:
         if delta_refrigerator == 10:
             if my_sourdough_model.weight < my_sourdough_model.max_maintenance_weight:
