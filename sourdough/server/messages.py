@@ -10,60 +10,54 @@ class Message:
         pass
 
     @staticmethod
-    def from_dict(serialized: dict):
-        pass
+    def deserialize_actions(serialized: List[dict]):
+        actions = []
+        for serialized_action in serialized:
+            if "feeding_action" in serialized_action:
+                actions.append(FeedingAction.from_dict(serialized_action))
+            elif "extraction_action" in serialized_action:
+                actions.append(ExtractionAction.from_dict(serialized_action))
+            elif "refrigerator_action" in serialized_action:
+                actions.append(RefrigerationAction.from_dict(serialized_action))
+            elif "target_action" in serialized_action:
+                actions.append(TargetAction.from_dict(serialized_action))
+            else:
+                raise Exception("Unknown action type.")
+        return actions
 
 
 class PerformActionsMessage(Message):
+    ACTIONS_TO_PERFORM_KEY = "actions_to_perform"
+
     def __init__(self, actions: List[Action]):
         self.actions = actions
 
     def to_dict(self):
-        return {"actions_to_perform": [action.to_dict() for action in self.actions]}
+        return {PerformActionsMessage.ACTIONS_TO_PERFORM_KEY: [action.to_dict() for action in self.actions]}
 
     @staticmethod
     def from_dict(serialized_dict: dict):
-        actions = []
-        if "actions__to_perform" in serialized_dict:
-            for action in serialized_dict["actions__to_perform"]:
-                if "feeding_action" in action:
-                    actions.append(FeedingAction.from_dict(action))
-                elif "extraction_action" in action:
-                    actions.append(ExtractionAction.from_dict(action))
-                elif "refrigerator_action" in action:
-                    actions.append(RefrigerationAction.from_dict(action))
-                elif "target_action" in action:
-                    actions.append(TargetAction.from_dict(action))
-                else:
-                    raise Exception("Unknown action type.")
+        if PerformActionsMessage.ACTIONS_TO_PERFORM_KEY in serialized_dict:
+            actions = Message.deserialize_actions(serialized_dict[PerformActionsMessage.ACTIONS_TO_PERFORM_KEY])
             return PerformActionsMessage(actions)
+        else:
+            raise Exception("serialized dict does not represent an PerformActionsMessage")
 
 
 class ActionsPerformedMessage(Message):
+    ACTIONS_PERFORMED_KEY = "actions_performed"
+
     def __init__(self, actions: List[Action]):
         self.actions = actions
 
-# for every Action instance in a list return its dictionary.
+# returns a dictionary that represent self.actions
     def to_dict(self):
-        return {"actions_performed": [action.to_dict() for action in self.actions]}
+        return {ActionsPerformedMessage.ACTIONS_PERFORMED_KEY: [action.to_dict() for action in self.actions]}
 
-# for every dictionary in "action performed" return a list of actions as ActionsPerformedMessage(list of actions)
-# returns a message for every dict
     @staticmethod
     def from_dict(serialized_dict: dict):
-        actions = []
-        if "actions_performed" in serialized_dict:
-            for action in serialized_dict["actions_performed"]:
-                if "feeding_action" in action:
-                    actions.append(FeedingAction.from_dict(action))
-                elif "extraction_action" in action:
-                    actions.append(ExtractionAction.from_dict(action))
-                elif "refrigerator_action" in action:
-                    actions.append(RefrigerationAction.from_dict(action))
-                elif "target_action" in action:
-                    actions.append(TargetAction.from_dict(action))
-                else:
-                    raise Exception("Unknown action type.")
+        if ActionsPerformedMessage.ACTIONS_PERFORMED_KEY in serialized_dict:
+            actions = Message.deserialize_actions(serialized_dict[ActionsPerformedMessage.ACTIONS_PERFORMED_KEY])
             return ActionsPerformedMessage(actions)
         else:
-            raise Exception("You didn't preform an action.")
+            raise Exception("serialized dict does not represent an ActionsPerformedMessage")

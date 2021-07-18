@@ -261,7 +261,6 @@ def test_action_to_perform_serialization_deserialize():
     feeding_action = FeedingAction("50", "50")
     message = ActionsPerformedMessage([target_action, feeding_action])
     json_message = json.dumps(message.to_dict())
-    print(json_message)
     load_json = json.loads(json_message)
     action = ActionsPerformedMessage.from_dict(load_json)
-    print(action)
+    assert json.dumps(action.to_dict()) == json_message
