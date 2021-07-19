@@ -260,7 +260,20 @@ def test_action_to_perform_serialization_deserialize():
     target_action = TargetAction(today, "150")
     feeding_action = FeedingAction("50", "50")
     message = ActionsPerformedMessage([target_action, feeding_action])
+    # .to_dict on the target and feeding actions
     json_message = json.dumps(message.to_dict())
     load_json = json.loads(json_message)
+    # .from_dict on the dicts in "actions_to_perform"
     action = ActionsPerformedMessage.from_dict(load_json)
+    # check if actions.to_dict is the same as message.to_dict
     assert json.dumps(action.to_dict()) == json_message
+
+
+def test_actions_to_perform_serialization_deserialization():
+    today = datetime.datetime.today().date()
+    target_action = TargetAction(today, "150")
+    feeding_action = FeedingAction("50", "50")
+    refrigeration_action = RefrigerationAction("in")
+    message = PerformActionsMessage([target_action, feeding_action, refrigeration_action])
+    json_message = json.dumps(message.to_dict())
+    print(json_message)
