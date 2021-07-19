@@ -22,6 +22,7 @@ class SourdoughModel(Base):
     refrigerator_actions = relationship("RefrigeratorActionModel", uselist=True, back_populates="sourdough")
     sourdough_targets = relationship("SourdoughTargetModel", uselist=True, back_populates="sourdough")
 
+# A function to calculate and return the weight of the sourdough starter.
     @property
     def weight(self):
         actions = []
@@ -38,6 +39,7 @@ class SourdoughModel(Base):
                 sourdough_starter_weight -= int(action.sourdough_weight_used_in_grams)
         return sourdough_starter_weight
 
+# A function to calculate and return how many days the sourdough starter has been in the refrigerator.
     @property
     def days_in_refrigerator(self):
         my_refrigerator = self.refrigerator_actions
@@ -46,11 +48,13 @@ class SourdoughModel(Base):
         delta = refrigerator_date - today
         return delta.days
 
+# A function that returns if the sourdough starter is in the refrigerator.
     @property
     def is_in_refrigerator(self):
         my_refrigerator_action = self.refrigerator_actions
         return my_refrigerator_action[-1].in_or_out
 
+# A function to calculate and return how many days there are until the sourdough target date.
     @property
     def days_until_target(self):
         my_target_date = self.sourdough_targets
@@ -59,20 +63,8 @@ class SourdoughModel(Base):
         delta = target - today
         return delta.days
 
+# A function to check if the sourdough starter weight is over the maintenance weight.
     @property
     def is_over_maintenance_weight(self):
-        if self.weight < self.max_maintenance_weight:
-            refrigerator_action = RefrigerationAction("out")
-            feeding_action = FeedingAction(str(self.weight), str(self.weight))
-            refrigerator_action2 = RefrigerationAction("in")
-            actions = [refrigerator_action, feeding_action, refrigerator_action2]
-            message = PerformActionsMessage(actions)
-            return message.to_dict()
-        else:
-            refrigerator_action = RefrigerationAction("out")
-            extraction_action = ExtractionAction(str(self.weight - 4))
-            refrigerator_action2 = RefrigerationAction("in")
-            actions = [refrigerator_action, extraction_action, refrigerator_action2]
-            message = PerformActionsMessage(actions)
-            return message.to_dict()
+        return self.weight < self.max_maintenance_weight
 
