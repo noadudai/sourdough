@@ -16,7 +16,7 @@ app = Flask(__name__)
 
 
 # A flask function to create an account and it's sourdough, and adding them to the database.
-@app.route('/create_account')
+@app.route('/create_account', methods=["GET", "POST"])
 def create_account():
     name = request.args.get('name')
     last_name = request.args.get('last_name')
