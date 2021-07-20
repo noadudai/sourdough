@@ -4,13 +4,13 @@ from sourdough.db.models.refrigerator_actions_table import RefrigeratorActionMod
 from sourdough.db.models.sourdough_table import SourdoughModel
 from sourdough.db.models.sourdough_targets_table import SourdoughTargetModel
 from sourdough.db.models.user_table import UserModel
-from sourdough.db.orm_config import Session
+from sourdough.db.orm_config import Session, Base, engine
 from flask import Flask, request, jsonify
 import datetime
 import json
 
 from sourdough.server.actions import RefrigerationAction, TargetAction, FeedingAction, ExtractionAction
-from sourdough.server.messages import PerformActionsMessage, ActionsPerformedMessage
+from sourdough.server.messages import PerformActionsMessage, ActionsPerformedMessage, SuccessMessage, FailedMessage
 
 app = Flask(__name__)
 
@@ -21,17 +21,23 @@ def create_account():
     name = request.args.get('name')
     last_name = request.args.get('last_name')
     email = request.args.get('email')
-    my_user_model = UserModel(name=name, last_name=last_name, email=email)
+#     my_user_model = UserModel(name=name, last_name=last_name, email=email)
     session = Session()
     if session.query(session.query(UserModel).filter_by(email=email).exists()).scalar():
-        raise Exception("User is already exists.")
+        status = "Failed!"
+        exception = "User is already exists."
+        message = FailedMessage(status, exception)
+        return json.dumps(message.to_dict())
     else:
+        my_user_model = UserModel(name=name, last_name=last_name, email=email)
         session.add(my_user_model)
         session.flush()
         my_sourdough_model = SourdoughModel(user_id=my_user_model.id)
         session.add(my_sourdough_model)
         session.commit()
-        return json.dumps({"action performed": "create account action"})
+        status = "Success!"
+        message = SuccessMessage(status)
+        return json.dumps(message.to_dict())
 
 
 # A flask function to see all the users in the database.
@@ -211,4 +217,6 @@ def user_is_in_db(email):
         raise Exception("There is no user with this email.")
 
 
-# Base.metadata.create_all(engine)
+if __name__ == '__main__':
+    Base.metadata.create_all(engine)
+    app.run()

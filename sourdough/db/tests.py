@@ -11,7 +11,7 @@ import json
 import requests
 
 from sourdough.server.actions import TargetAction, FeedingAction, ExtractionAction, RefrigerationAction
-from sourdough.server.messages import ActionsPerformedMessage, PerformActionsMessage
+from sourdough.server.messages import ActionsPerformedMessage, PerformActionsMessage, SuccessMessage
 
 app = Flask(__name__)
 
@@ -23,7 +23,7 @@ def create_account():
     email = request.args.get('email')
     session = Session()
     if session.query(session.query(UserModel).filter_by(email=email).exists()).scalar():
-        raise Exception("User is already exists.")
+        return SuccessMessage.failed("Failed!. User is already exists.")
     else:
         my_user_model = UserModel(name=name, last_name=last_name, email=email)
         session.add(my_user_model)
@@ -31,7 +31,7 @@ def create_account():
         my_sourdough_model = SourdoughModel(user_id=my_user_model.id)
         session.add(my_sourdough_model)
         session.commit()
-        return json.dumps({"action performed": "create account action"})
+        return SuccessMessage.success()
 
 
 @app.route('/show_all_users')
