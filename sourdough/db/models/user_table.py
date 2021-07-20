@@ -14,5 +14,4 @@ class UserModel(Base):
     sourdoughs = relationship("SourdoughModel", uselist=True, back_populates="user")
 
     def __repr__(self):
-        return "<UserModel(name='%s', last_name='%s', email='%s')>" % (
-            self.name, self.last_name, self.email)
+        return f"<UserModel(name={self.name}, last_name={self.last_name}, email={self.email})>"

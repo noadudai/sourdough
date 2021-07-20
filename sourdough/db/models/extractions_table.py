@@ -14,5 +14,5 @@ class ExtractionModel(Base):
     sourdough_weight_used_in_grams = Column(Integer, nullable=False)
 
     def __repr__(self):
-        return "<(ExtractionModel(date_of_action='%s', sourdough_weight_used_in_grams='%s')>" % (
-            self.date_of_action, self.sourdough_weight_used_in_grams)
+        return f"<(ExtractionModel(date_of_action={self.date_of_action}, " \
+               f"sourdough_weight_used_in_grams={self.sourdough_weight_used_in_grams})>"

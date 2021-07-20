@@ -14,5 +14,5 @@ class SourdoughTargetModel(Base):
     sourdough_weight_target_in_grams = Column(Integer, nullable=False)
 
     def __repr__(self):
-        return "<SourdoughTargetModel(date_of_action='%s', sourdough_weight_target_in_grams='%s')>" % (
-            self.date_of_action, self.sourdough_weight_target_in_grams)
+        return f"<SourdoughTargetModel(date_of_action={self.date_of_action}, " \
+               f"sourdough_weight_target_in_grams={self.sourdough_weight_target_in_grams})>"

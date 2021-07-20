@@ -14,4 +14,4 @@ class RefrigeratorActionModel(Base):
     in_or_out = Column(String, nullable=False)
 
     def __repr__(self):
-        return "<RefrigeratorActionModel(date_of_action='%s', in_or_out='%s')>" % (self.date_of_action, self.in_or_out)
+        return f"<RefrigeratorActionModel(date_of_action={self.date_of_action}, in_or_out={self.in_or_out})>"

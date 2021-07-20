@@ -15,5 +15,6 @@ class FeedingActionModel(Base):
     flour_weight_added_in_grams = Column(Integer, nullable=False)
 
     def __repr__(self):
-        return "<FeedingActionModel(date_of_action='%s', water_weight_added_in_grams='%s', flour_weight_added_in_grams='%s')>" % (
-            self.date_of_action, self.water_weight_added_in_grams, self.flour_weight_added_in_grams)
+        return f"<FeedingActionModel(date_of_action={self.date_of_action}, " \
+               f"water_weight_added_in_grams={self.water_weight_added_in_grams}, " \
+               f"flour_weight_added_in_grams={self.flour_weight_added_in_grams})>"
