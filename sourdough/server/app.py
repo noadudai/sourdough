@@ -9,8 +9,8 @@ from flask import Flask, request, jsonify
 import datetime
 import json
 
-from sourdough.server.actions import RefrigerationAction, TargetAction, FeedingAction, ExtractionAction
-from sourdough.server.messages import PerformActionsMessage, ActionsPerformedMessage, SuccessMessage, FailedMessage
+from sourdough.communication.actions import RefrigerationAction, FeedingAction, ExtractionAction
+from sourdough.communication.messages import PerformActionsMessage, SuccessMessage, FailedMessage
 
 app = Flask(__name__)
 
@@ -18,9 +18,10 @@ app = Flask(__name__)
 # A flask function to create an account and it's sourdough, and adding them to the database.
 @app.route('/create_account', methods=["GET", "POST"])
 def create_account():
-    name = request.args.get('name')
-    last_name = request.args.get('last_name')
-    email = request.args.get('email')
+    data = request.args
+    name = data['name']
+    last_name = data['last_name']
+    email = data['email']
     session = Session()
     if session.query(session.query(UserModel).filter_by(email=email).exists()).scalar():
         message = FailedMessage("Failed", "User already exists.")
@@ -75,7 +76,7 @@ def adding_a_sourdough_target():
 
 
 # A flask function to add a new feeding action to the database for the specified user provided from the email.
-@app.route('/add_a_feeding_action')
+@app.route('/add_a_feeding_action', methods=["GET", "POST"])
 def adding_a_feeding_action():
     try:
         user_email = request.args.get('email')

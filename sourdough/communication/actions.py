@@ -1,7 +1,6 @@
 import datetime
 from abc import abstractmethod
 from typing import List
-import json
 
 
 class Action:
@@ -63,3 +62,23 @@ class TargetAction(Action):
             date=datetime.date.fromisoformat(serialized["target_action"]["date"]),
             target_weight=serialized["target_action"]["target_weight"]
         )
+
+
+def deserialize_actions(serialized: List[dict]):
+    actions = []
+    for serialized_action in serialized:
+        actions.append(deserialize_action(serialized_action))
+    return actions
+
+
+def deserialize_action(serialized: dict):
+    if "feeding_action" in serialized:
+        return FeedingAction.from_dict(serialized)
+    elif "extraction_action" in serialized:
+        return ExtractionAction.from_dict(serialized)
+    elif "refrigerator_action" in serialized:
+        return RefrigerationAction.from_dict(serialized)
+    elif "target_action" in serialized:
+        return TargetAction.from_dict(serialized)
+    else:
+        raise Exception("Unknown action type.")

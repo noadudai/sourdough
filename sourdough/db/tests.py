@@ -8,10 +8,9 @@ from sourdough.db.orm_config import Base, engine, Session
 from flask import Flask, request, jsonify
 import datetime
 import json
-import requests
 
-from sourdough.server.actions import TargetAction, FeedingAction, ExtractionAction, RefrigerationAction
-from sourdough.server.messages import ActionsPerformedMessage, PerformActionsMessage, SuccessMessage
+from sourdough.communication.actions import TargetAction, FeedingAction, ExtractionAction, RefrigerationAction
+from sourdough.communication.messages import ActionsPerformedMessage, PerformActionsMessage, SuccessMessage
 
 app = Flask(__name__)
 

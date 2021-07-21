@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import List
 
-from .actions import Action, FeedingAction, ExtractionAction, RefrigerationAction, TargetAction
+from .actions import Action, deserialize_actions
 
 
 class Message:
@@ -10,22 +10,6 @@ class Message:
     @abstractmethod
     def to_dict(self):
         pass
-
-    @staticmethod
-    def deserialize_actions(serialized: List[dict]):
-        actions = []
-        for serialized_action in serialized:
-            if "feeding_action" in serialized_action:
-                actions.append(FeedingAction.from_dict(serialized_action))
-            elif "extraction_action" in serialized_action:
-                actions.append(ExtractionAction.from_dict(serialized_action))
-            elif "refrigerator_action" in serialized_action:
-                actions.append(RefrigerationAction.from_dict(serialized_action))
-            elif "target_action" in serialized_action:
-                actions.append(TargetAction.from_dict(serialized_action))
-            else:
-                raise Exception("Unknown action type.")
-        return actions
 
 
 class PerformActionsMessage(Message):
@@ -43,7 +27,7 @@ class PerformActionsMessage(Message):
     @staticmethod
     def from_dict(serialized_dict: dict):
         if serialized_dict[Message.MESSAGE_TYPE_KEY] == PerformActionsMessage.__name__:
-            actions = Message.deserialize_actions(serialized_dict[PerformActionsMessage.ACTIONS_TO_PERFORM_KEY])
+            actions = deserialize_actions(serialized_dict[PerformActionsMessage.ACTIONS_TO_PERFORM_KEY])
             return PerformActionsMessage(actions)
         else:
             raise Exception("serialized dict does not represent an PerformActionsMessage")
@@ -65,7 +49,7 @@ class ActionsPerformedMessage(Message):
     @staticmethod
     def from_dict(serialized_dict: dict):
         if serialized_dict[Message.MESSAGE_TYPE_KEY] == ActionsPerformedMessage.__name__:
-            actions = Message.deserialize_actions(serialized_dict[ActionsPerformedMessage.ACTIONS_PERFORMED_KEY])
+            actions = deserialize_actions(serialized_dict[ActionsPerformedMessage.ACTIONS_PERFORMED_KEY])
             return ActionsPerformedMessage(actions)
         else:
             raise Exception("serialized dict does not represent an ActionsPerformedMessage")
@@ -89,6 +73,9 @@ class SuccessMessage(Message):
             return SuccessMessage(status)
         else:
             raise Exception("serialized dict does not represent a SuccessMessage")
+
+    def __repr__(self):
+        return f"SuccessMessage: {self.status}"
 
 
 class FailedMessage(Message):
@@ -114,3 +101,20 @@ class FailedMessage(Message):
             return FailedMessage(status, exception)
         else:
             raise Exception("serialized dict does not represent a FailedMessage")
+
+    def __repr__(self):
+        return f"FailedMessage: {self.exception}"
+
+
+def deserialize_message(serialized: dict) -> Message:
+    for Message.MESSAGE_TYPE_KEY in serialized:
+        if serialized[Message.MESSAGE_TYPE_KEY] == SuccessMessage.__name__:
+            return SuccessMessage.from_dict(serialized)
+        elif serialized[Message.MESSAGE_TYPE_KEY] == FailedMessage.__name__:
+            return FailedMessage.from_dict(serialized)
+        elif serialized[Message.MESSAGE_TYPE_KEY] == ActionsPerformedMessage.__name__:
+            return ActionsPerformedMessage.from_dict(serialized)
+        elif serialized[Message.MESSAGE_TYPE_KEY] == PerformActionsMessage.__name__:
+            return PerformActionsMessage.from_dict(serialized)
+        else:
+            raise Exception("Unknown message type.")
