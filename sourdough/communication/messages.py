@@ -11,6 +11,11 @@ class Message:
     def to_dict(self):
         pass
 
+    @staticmethod
+    def verify_message_type(serialized_dict: dict, target_message_class):
+        if serialized_dict[Message.MESSAGE_TYPE_KEY] != target_message_class:
+            raise Exception(f"serialized dict does not represent a {target_message_class}")
+
 
 class PerformActionsMessage(Message):
     ACTIONS_TO_PERFORM_KEY = "actions_to_perform"
@@ -26,11 +31,11 @@ class PerformActionsMessage(Message):
 
     @staticmethod
     def from_dict(serialized_dict: dict):
-        if serialized_dict[Message.MESSAGE_TYPE_KEY] == PerformActionsMessage.__name__:
-            actions = deserialize_actions(serialized_dict[PerformActionsMessage.ACTIONS_TO_PERFORM_KEY])
-            return PerformActionsMessage(actions)
-        else:
-            raise Exception("serialized dict does not represent an PerformActionsMessage")
+        Message.verify_message_type(serialized_dict, PerformActionsMessage)
+
+        actions = deserialize_actions(serialized_dict[PerformActionsMessage.ACTIONS_TO_PERFORM_KEY])
+        return PerformActionsMessage(actions)
+
 
 
 class ActionsPerformedMessage(Message):
@@ -48,34 +53,34 @@ class ActionsPerformedMessage(Message):
 
     @staticmethod
     def from_dict(serialized_dict: dict):
-        if serialized_dict[Message.MESSAGE_TYPE_KEY] == ActionsPerformedMessage.__name__:
-            actions = deserialize_actions(serialized_dict[ActionsPerformedMessage.ACTIONS_PERFORMED_KEY])
-            return ActionsPerformedMessage(actions)
-        else:
-            raise Exception("serialized dict does not represent an ActionsPerformedMessage")
+        Message.verify_message_type(serialized_dict, ActionsPerformedMessage)
+
+        actions = deserialize_actions(serialized_dict[ActionsPerformedMessage.ACTIONS_PERFORMED_KEY])
+        return ActionsPerformedMessage(actions)
+
 
 
 class SuccessMessage(Message):
-    SUCCESS_KEY = "reason"
+    REASON_KEY = "reason"
 
-    def __init__(self, status):
-        self.status = status
+    def __init__(self, reason):
+        self.reason = reason
 
     def to_dict(self):
         return {
             Message.MESSAGE_TYPE_KEY: SuccessMessage.__name__,
-            SuccessMessage.SUCCESS_KEY: self.status}
+            SuccessMessage.REASON_KEY: self.reason}
 
     @staticmethod
     def from_dict(serialized_dict):
-        if serialized_dict[Message.MESSAGE_TYPE_KEY] == SuccessMessage.__name__:
-            status = serialized_dict[SuccessMessage.SUCCESS_KEY]
-            return SuccessMessage(status)
-        else:
-            raise Exception("serialized dict does not represent a SuccessMessage")
+        Message.verify_message_type(serialized_dict, SuccessMessage)
+
+        reason = serialized_dict[SuccessMessage.REASON_KEY]
+        return SuccessMessage(reason)
+
 
     def __repr__(self):
-        return f"SuccessMessage: {self.status}"
+        return f"SuccessMessage: {self.reason}"
 
 
 class FailedMessage(Message):
@@ -92,11 +97,11 @@ class FailedMessage(Message):
 
     @staticmethod
     def from_dict(serialized_dict):
-        if serialized_dict[Message.MESSAGE_TYPE_KEY] == FailedMessage.__name__:
-            exception = serialized_dict[FailedMessage.EXCEPTION_KEY]
-            return FailedMessage(exception)
-        else:
-            raise Exception("serialized dict does not represent a FailedMessage")
+        Message.verify_message_type(serialized_dict, FailedMessage)
+
+        exception = serialized_dict[FailedMessage.EXCEPTION_KEY]
+        return FailedMessage(exception)
+
 
     def __repr__(self):
         return f"FailedMessage: {self.exception}"
