@@ -151,15 +151,15 @@ def my_action_today():
             user_email = request.args.get('email')
             user_model = get_user(user_email, session)
             my_sourdough_model = session.query(SourdoughModel).filter_by(user_id=user_model.id).one()
-            delta_target = my_sourdough_model.days_until_target
-            delta_refrigerator = my_sourdough_model.days_in_refrigerator
+            days_until_target = my_sourdough_model.days_until_target
+            days_in_refrigerator = my_sourdough_model.days_in_refrigerator
             target_weight = session.query(
                             SourdoughTargetModel.sourdough_weight_target_in_grams
                             ).filter_by(sourdough_id=my_sourdough_model.id)[-1]
             refrigerator_state_model = session.query(
                                        RefrigeratorActionModel.in_or_out).filter_by(sourdough_id=my_sourdough_model.id)[-1]
-            if delta_target < 0:
-                if delta_refrigerator == 10:
+            if days_until_target < 0:
+                if days_in_refrigerator == 10:
                     if my_sourdough_model.is_over_maintenance_weight:
                         refrigerator_action = RefrigerationAction("out")
                         feeding_action = FeedingAction(my_sourdough_model.weight, my_sourdough_model.weight)
@@ -174,13 +174,13 @@ def my_action_today():
                         actions = [refrigerator_action, extraction_action, refrigerator_action2]
                         message = PerformActionsMessage(actions)
                         return json.load(message.to_dict())
-                elif 9 < delta_refrigerator > 1:
+                elif 9 < days_in_refrigerator > 1:
                     refrigeration_action = RefrigerationAction(refrigerator_state_model.in_or_out)
                     message = PerformActionsMessage([refrigeration_action])
                     return json.dumps(message.to_dict())
                 else:
                     raise Exception("The sourdough starter is in the refrigerator more than the max 10 days!.")
-            elif delta_target == 0:
+            elif days_until_target == 0:
                 feeding_action = FeedingAction(str((target_weight.sourdough_weight_target_in_grams / 3) - 4),
                                                str((target_weight.sourdough_weight_target_in_grams / 3) - 4))
                 extraction_action = ExtractionAction(str(target_weight.sourdough_weight_target_in_grams - 4))
@@ -188,22 +188,22 @@ def my_action_today():
                 action = [feeding_action, extraction_action, refrigeration_action]
                 message = PerformActionsMessage(action)
                 return json.dumps(message.to_dict())
-            elif 0 < delta_target <= 2:
+            elif 0 < days_until_target <= 2:
                 feeding_action = FeedingAction(str(my_sourdough_model.weight), str(my_sourdough_model.weight))
                 message = PerformActionsMessage([feeding_action])
                 return json.dumps(message.to_dict())
-            elif delta_target == 3:
+            elif days_until_target == 3:
                 refrigeration_action = RefrigerationAction("out")
                 extraction_action = ExtractionAction(str(my_sourdough_model.weight - 2))
                 feeding_action = FeedingAction("2", "2")
                 actions = [refrigeration_action, extraction_action, feeding_action]
                 message = PerformActionsMessage(actions)
                 return json.dumps(message.to_dict())
-            elif 9 < delta_target > 3:
+            elif 9 < days_until_target > 3:
                 refrigeration_action = RefrigerationAction("in")
                 message = PerformActionsMessage([refrigeration_action])
                 return json.dumps(message.to_dict())
-            elif delta_target >= 10:
+            elif days_until_target >= 10:
                 if my_sourdough_model.is_over_maintenance_weight:
                     refrigerator_action = RefrigerationAction("out")
                     feeding_action = FeedingAction(my_sourdough_model.weight, my_sourdough_model.weight)
