@@ -109,14 +109,13 @@ class FailedMessage(Message):
 
 
 def deserialize_message(serialized: dict) -> Message:
-    for Message.MESSAGE_TYPE_KEY in serialized:
-        if serialized[Message.MESSAGE_TYPE_KEY] == SuccessMessage.__name__:
-            return SuccessMessage.from_dict(serialized)
-        elif serialized[Message.MESSAGE_TYPE_KEY] == FailedMessage.__name__:
-            return FailedMessage.from_dict(serialized)
-        elif serialized[Message.MESSAGE_TYPE_KEY] == ActionsPerformedMessage.__name__:
-            return ActionsPerformedMessage.from_dict(serialized)
-        elif serialized[Message.MESSAGE_TYPE_KEY] == PerformActionsMessage.__name__:
-            return PerformActionsMessage.from_dict(serialized)
-        else:
-            raise Exception(f"Unknown message type {serialized}")
+    if serialized[Message.MESSAGE_TYPE_KEY] == SuccessMessage.__name__:
+        return SuccessMessage.from_dict(serialized)
+    elif serialized[Message.MESSAGE_TYPE_KEY] == FailedMessage.__name__:
+        return FailedMessage.from_dict(serialized)
+    elif serialized[Message.MESSAGE_TYPE_KEY] == ActionsPerformedMessage.__name__:
+        return ActionsPerformedMessage.from_dict(serialized)
+    elif serialized[Message.MESSAGE_TYPE_KEY] == PerformActionsMessage.__name__:
+        return PerformActionsMessage.from_dict(serialized)
+    else:
+        raise Exception(f"Unknown message type {serialized}")
