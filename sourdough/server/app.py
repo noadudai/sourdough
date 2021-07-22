@@ -57,19 +57,13 @@ def adding_a_sourdough_target():
             date = datetime.datetime.fromisoformat(date_of_action)
             sourdough_weight_target = request.args.get('sourdough_weight_target_in_grams')
             user_model = get_user(user_email, session)
-            today = datetime.datetime.today().date()
-            target_date = datetime.datetime.date(date_of_action)
-            delta = target_date - today
-            if delta.days < 0:
-                raise Exception("This date already passed.")
-            else:
-                my_target_model = SourdoughTargetModel(sourdough_id=user_model.id,
-                                                       date_of_action=date,
-                                                       sourdough_weight_target_in_grams=int(sourdough_weight_target))
-                session.add(my_target_model)
-                session.commit()
-                message = SuccessMessage("Added sourdough target successfully")
-                return json.dumps(message.to_dict())
+            my_target_model = SourdoughTargetModel(sourdough_id=user_model.id,
+                                                   date_of_action=date,
+                                                   sourdough_weight_target_in_grams=int(sourdough_weight_target))
+            session.add(my_target_model)
+            session.commit()
+            message = SuccessMessage("Added sourdough target successfully")
+            return json.dumps(message.to_dict())
         except Exception as e:
             message_failed = FailedMessage("Failed", repr(e))
             return json.dumps(message_failed.to_dict())
@@ -172,14 +166,14 @@ def my_action_today():
                         refrigerator_action2 = RefrigerationAction("in")
                         actions = [refrigerator_action, feeding_action, refrigerator_action2]
                         message = PerformActionsMessage(actions)
-                        return message.to_dict()
+                        return json.load(message.to_dict())
                     else:
                         refrigerator_action = RefrigerationAction("out")
                         extraction_action = ExtractionAction(my_sourdough_model.weight - 4)
                         refrigerator_action2 = RefrigerationAction("in")
                         actions = [refrigerator_action, extraction_action, refrigerator_action2]
                         message = PerformActionsMessage(actions)
-                        return message.to_dict()
+                        return json.load(message.to_dict())
                 elif 9 < delta_refrigerator > 1:
                     refrigeration_action = RefrigerationAction(refrigerator_state_model.in_or_out)
                     message = PerformActionsMessage([refrigeration_action])
@@ -216,14 +210,14 @@ def my_action_today():
                     refrigerator_action2 = RefrigerationAction("in")
                     actions = [refrigerator_action, feeding_action, refrigerator_action2]
                     message = PerformActionsMessage(actions)
-                    return message.to_dict()
+                    return json.load(message.to_dict())
                 else:
                     refrigerator_action = RefrigerationAction("out")
                     extraction_action = ExtractionAction(my_sourdough_model.weight - 4)
                     refrigerator_action2 = RefrigerationAction("in")
                     actions = [refrigerator_action, extraction_action, refrigerator_action2]
                     message = PerformActionsMessage(actions)
-                    return message.to_dict()
+                    return json.load(message.to_dict())
         except Exception as e:
             message_failed = FailedMessage("Failed", repr(e))
             return json.dumps(message_failed.to_dict())

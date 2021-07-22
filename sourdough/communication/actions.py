@@ -81,4 +81,5 @@ def deserialize_action(serialized: dict):
     elif "target_action" in serialized:
         return TargetAction.from_dict(serialized)
     else:
-        raise Exception("Unknown action type.")
+        raise Exception(f"Unknown action type {serialized}")
+

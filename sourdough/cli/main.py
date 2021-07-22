@@ -3,7 +3,10 @@ from PyInquirer import prompt
 from examples import custom_style_2
 import requests
 import json
-from sourdough.communication.messages import SuccessMessage, deserialize_message, FailedMessage
+
+from sourdough.communication.actions import deserialize_actions, FeedingAction, ExtractionAction, RefrigerationAction
+from sourdough.communication.messages import SuccessMessage, deserialize_message, FailedMessage, PerformActionsMessage
+import datetime
 
 # 2.An entry for the SourdoughPy, confirm account or sign up function, will call action selector function.
 # 3.A while loop to go over each action and select the function to get the info for that action.
@@ -32,7 +35,13 @@ def ask_for_action_prompt():
         'type': 'list',
         'name': 'actions',
         'message': 'Which action would you like to perform?',
-        'choices': ['target action', 'feeding action', 'extraction action', ' refrigeration action']
+        'choices': [
+            'what do i need to do today?',
+            'target action',
+            'feeding action',
+            'extraction action',
+            'refrigeration action'
+        ]
     }
     answers = prompt(actions_prompt)
     return answers['actions']
@@ -72,7 +81,7 @@ def get_email():
     return answer['email']
 
 
-def get_water_and_flour_weights_prompt():
+def get_feeding_action_info_prompt():
     questions = [
         {
             'type': 'input',
@@ -147,7 +156,7 @@ def stay_or_leave():
         }
     ]
     answers = prompt(question, style=custom_style_2)
-    return answers['stay_or_leave']
+    return answers['stay_or_leave'] == "do another action"
 
 
 def has_account() -> bool:
@@ -197,7 +206,7 @@ def login():
 
 
 def do_a_feeding_action(user_email):
-    water, flour = get_water_and_flour_weights_prompt()
+    water, flour = get_feeding_action_info_prompt()
     request = requests.post(
         "http://127.0.0.1:5000/add_a_feeding_action",
         params={'email': user_email, 'water_weight_added_in_grams': water, 'flour_weight_added_in_grams': flour}
@@ -207,6 +216,75 @@ def do_a_feeding_action(user_email):
     print(message)
 
 
+def do_an_extraction_action(user_email):
+    sourdough_weight = get_extraction_info_prompt()
+    request = requests.post(
+        "http://127.0.0.1:5000/add_extraction",
+        params={"email": user_email, "sourdough_weight_used_in_grams": sourdough_weight}
+    )
+    response = json.loads(request.text)
+    message = deserialize_message(response)
+    print(message)
+
+
+def do_a_refrigeration_action(user_email):
+    in_or_out = get_refrigeration_action_prompt()
+    request = requests.post(
+        "http://127.0.0.1:5000/add_a_refrigerator_action",
+        params={'email': user_email, 'in_or_out': in_or_out}
+    )
+    response = json.loads(request.text)
+    message = deserialize_message(response)
+    print(message)
+
+
+def do_a_target_action(user_email):
+    date_of_action, weight = get_target_info_prompt()
+    request = requests.post(
+        "http://127.0.0.1:5000/add_a_target",
+        params={'email': user_email, 'date_of_action': date_of_action, 'sourdough_weight_target_in_grams': weight}
+    )
+    response = json.loads(request.text)
+    message = deserialize_message(response)
+    print(message)
+
+
+def do_actions_today(user_email):
+    request = requests.post(
+        "http://127.0.0.1:5000/my_action_today",
+        params={'email': user_email}
+    )
+
+    response = json.loads(request.text)
+    message = deserialize_message(response)
+    if isinstance(message, PerformActionsMessage):
+        for action in message.actions:
+            if isinstance(action, FeedingAction):
+                print(
+                    "Please feed your sourdough starter with " +
+                    str(action.water) + "grams water, and " +
+                    str(action.flour) + "grams flour"
+                )
+            elif isinstance(action, ExtractionAction):
+                print(
+                    "Please extract " +
+                    str(action.extraction_weight) +
+                    "grams from your sourdough starter"
+                )
+            elif isinstance(action, RefrigerationAction):
+                if action.in_or_out == 'in':
+                    print(
+                        "Please put your sourdough in the refrigerator"
+                    )
+                else:
+                    print(
+                        "Please take your sourdough stater out of the refrigerator"
+                    )
+    else:
+        print(message)
+        raise Exception("Actions today returned unexpected message type")
+
+
 def sign_up_or_login() -> str:
     if has_account():
         return login()
@@ -214,24 +292,31 @@ def sign_up_or_login() -> str:
         return create_account()
 
 
+def select_and_perform_action(email):
+    action = ask_for_action_prompt()
+    if action == 'feeding action':
+        do_a_feeding_action(email)
+    elif action == 'extraction action':
+        do_an_extraction_action(email)
+    elif action == 'refrigeration action':
+        do_a_refrigeration_action(email)
+    elif action == 'target action':
+        do_a_target_action(email)
+    elif action == 'what do i need to do today?':
+        do_actions_today(email)
+
+
 def start():
     print("Welcome to SourdoughPy.")
     print(BREAD_ASCII_ART)
     email = sign_up_or_login()
-    action = ask_for_action_prompt()
-    if action == 'feeding action':
-        do_a_feeding_action(email)
+    select_and_perform_action(email)
+    while stay_or_leave():
+        select_and_perform_action(email)
+    else:
+        print("Thank you!, see you tomorrow.")
 
 
 if __name__ == '__main__':
     start()
-#    r = requests.post(
-#        "http://127.0.0.1:5000/create_account",
-#        params={"name": name, "last_name": last_name, "email": email}
-#    )
-#    response = json.loads(r.text)
-#    print(response)
-#    message = deserialize_message(response)
-#    print(message)
-#    create_account()
-#    do_a_feeding_action()
+

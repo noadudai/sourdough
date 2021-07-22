@@ -117,4 +117,4 @@ def deserialize_message(serialized: dict) -> Message:
         elif serialized[Message.MESSAGE_TYPE_KEY] == PerformActionsMessage.__name__:
             return PerformActionsMessage.from_dict(serialized)
         else:
-            raise Exception("Unknown message type.")
+            raise Exception(f"Unknown message type {serialized}")
