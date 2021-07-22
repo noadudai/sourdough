@@ -24,7 +24,7 @@ def create_account():
         last_name = data['last_name']
         email = data['email']
         if session.query(session.query(UserModel).filter_by(email=email).exists()).scalar():
-            message = FailedMessage("Failed", "User already exists.")
+            message = FailedMessage("User already exists.")
             return json.dumps(message.to_dict())
         else:
             my_user_model = UserModel(name=name, last_name=last_name, email=email)
@@ -65,7 +65,7 @@ def adding_a_sourdough_target():
             message = SuccessMessage("Added sourdough target successfully")
             return json.dumps(message.to_dict())
         except Exception as e:
-            message_failed = FailedMessage("Failed", repr(e))
+            message_failed = FailedMessage(repr(e))
             return json.dumps(message_failed.to_dict())
 
 
@@ -86,7 +86,7 @@ def adding_a_feeding_action():
             message = SuccessMessage("Added a feeding action successfully.")
             return json.dumps(message.to_dict())
         except Exception as e:
-            message_failed = FailedMessage("Failed", repr(e))
+            message_failed = FailedMessage(repr(e))
             return json.dumps(message_failed.to_dict())
 
 
@@ -105,7 +105,7 @@ def adding_extraction():
             message = SuccessMessage("Added an extraction action successfully.")
             return json.dumps(message.to_dict())
         except Exception as e:
-            message_failed = FailedMessage("Failed", repr(e))
+            message_failed = FailedMessage(repr(e))
             return json.dumps(message_failed.to_dict())
 
 
@@ -123,7 +123,7 @@ def adding_a_refrigerator_action():
             message = SuccessMessage("Added a refrigeration action successfully.")
             return json.dumps(message.to_dict())
         except Exception as e:
-            message_failed = FailedMessage("Failed", repr(e))
+            message_failed = FailedMessage(repr(e))
             return json.dumps(message_failed.to_dict())
 
 
@@ -138,7 +138,7 @@ def my_sourdough_starter_weight():
             my_weight = my_sourdough.weight
             return json.dumps(my_weight)
         except Exception as e:
-            message_failed = FailedMessage("Failed", repr(e))
+            message_failed = FailedMessage(repr(e))
             return json.dumps(message_failed.to_dict())
 
 
@@ -219,7 +219,7 @@ def my_action_today():
                     message = PerformActionsMessage(actions)
                     return json.load(message.to_dict())
         except Exception as e:
-            message_failed = FailedMessage("Failed", repr(e))
+            message_failed = FailedMessage(repr(e))
             return json.dumps(message_failed.to_dict())
 
 
@@ -245,7 +245,7 @@ def is_user_in_db():
             else:
                 raise Exception("There is no user with this email.")
         except Exception as e:
-            message_failed = FailedMessage("Failed", repr(e))
+            message_failed = FailedMessage(repr(e))
             return json.dumps(message_failed.to_dict())
 
 

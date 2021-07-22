@@ -79,26 +79,22 @@ class SuccessMessage(Message):
 
 
 class FailedMessage(Message):
-    STATUS_KEY = "status"
     EXCEPTION_KEY = "exception"
 
-    def __init__(self, status, exception):
-        self.status = status
+    def __init__(self, exception):
         self.exception = exception
 
     def to_dict(self):
         return {
             Message.MESSAGE_TYPE_KEY: FailedMessage.__name__,
-            FailedMessage.STATUS_KEY: self.status,
             FailedMessage.EXCEPTION_KEY: self.exception
         }
 
     @staticmethod
     def from_dict(serialized_dict):
         if serialized_dict[Message.MESSAGE_TYPE_KEY] == FailedMessage.__name__:
-            status = serialized_dict[FailedMessage.STATUS_KEY]
             exception = serialized_dict[FailedMessage.EXCEPTION_KEY]
-            return FailedMessage(status, exception)
+            return FailedMessage(exception)
         else:
             raise Exception("serialized dict does not represent a FailedMessage")
 
