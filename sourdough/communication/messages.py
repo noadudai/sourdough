@@ -13,8 +13,9 @@ class Message:
 
     @staticmethod
     def verify_message_type(serialized_dict: dict, target_message_class):
-        if serialized_dict[Message.MESSAGE_TYPE_KEY] != target_message_class:
-            raise Exception(f"serialized dict does not represent a {target_message_class}")
+        class_name = target_message_class.__name__
+        if serialized_dict[Message.MESSAGE_TYPE_KEY] != class_name:
+            raise Exception(f"serialized dict does not represent a {class_name}")
 
 
 class PerformActionsMessage(Message):
