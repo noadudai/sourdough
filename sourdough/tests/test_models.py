@@ -12,7 +12,7 @@ from sourdough.db.models.user_table import UserModel
 import json
 
 from sourdough.communication.actions import RefrigerationAction, FeedingAction, ExtractionAction, TargetAction
-from sourdough.messages.messages import PerformActionsMessage, ActionsPerformedMessage
+from sourdough.communication.messages import PerformActionsMessage, ActionsPerformedMessage
 
 
 def test_create_a_user_and_a_sourdough_in_db(session):

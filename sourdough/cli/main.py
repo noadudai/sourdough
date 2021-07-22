@@ -3,16 +3,42 @@ from PyInquirer import prompt
 from examples import custom_style_2
 import requests
 import json
-from sourdough.communication.messages import SuccessMessage, deserialize_message
+from sourdough.communication.messages import SuccessMessage, deserialize_message, FailedMessage
 
-# TODO:
-# 1.An action selector function(the user selects an action)
 # 2.An entry for the SourdoughPy, confirm account or sign up function, will call action selector function.
 # 3.A while loop to go over each action and select the function to get the info for that action.
 # 4.At the end of the action with the success message, ask if the user wants to do another action or exit.
+BREAD_ASCII_ART = """      
+                             ██████████████                          
+                     ████████▓▓▓▓██░░░░██▓▓████                      
+             ████████░░░░░░░░██▓▓██░░░░██▓▓▓▓▓▓██                    
+         ████░░██▓▓▓▓██░░░░░░██▓▓▓▓██░░██▓▓▓▓▓▓▓▓██                  
+     ████░░░░░░░░██▓▓▓▓██░░░░██▓▓▓▓██░░██▓▓▓▓▓▓▓▓██                  
+   ██▓▓▓▓██░░░░░░░░██▓▓▓▓██░░██▓▓▓▓██░░██▓▓▓▓▓▓██                    
+ ██▓▓▓▓▓▓▓▓██░░░░░░██▓▓▓▓██░░██▓▓▓▓██░░██▓▓▓▓▓▓██                    
+ ██▓▓▓▓▓▓▓▓▓▓██░░░░██▓▓▓▓██░░██▓▓▓▓▓▓██▓▓▓▓▓▓▓▓██                    
+ ██▓▓▓▓▓▓▓▓▓▓▓▓██░░██▓▓▓▓▓▓██▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓██                      
+ ██▓▓▓▓▓▓▓▓▓▓▓▓▓▓██▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓████                        
+ ██▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓████                            
+   ████▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓████                                
+       ████████▓▓▓▓▓▓▓▓▓▓▓▓██████                                    
+               ████████████                                          
+"""
 
 
-def get_account_info():
+# 1
+def ask_for_action_prompt():
+    actions_prompt = {
+        'type': 'list',
+        'name': 'actions',
+        'message': 'Which action would you like to perform?',
+        'choices': ['target action', 'feeding action', 'extraction action', ' refrigeration action']
+    }
+    answers = prompt(actions_prompt)
+    return answers['actions']
+
+
+def get_account_info_prompt():
     questions = [
         {
             'type': 'input',
@@ -34,7 +60,19 @@ def get_account_info():
     return answers["name"], answers["last_name"], answers["email"]
 
 
-def get_water_and_flour_weights():
+def get_email():
+    question = [
+        {
+            'type': 'input',
+            'name': 'email',
+            'message': 'Please enter your email address:'
+        }
+    ]
+    answer = prompt(question, style=custom_style_2)
+    return answer['email']
+
+
+def get_water_and_flour_weights_prompt():
     questions = [
         {
             'type': 'input',
@@ -51,7 +89,7 @@ def get_water_and_flour_weights():
     return answers["water_added_in_grams"], answers["flour_added_in_grams"]
 
 
-def get_target_info():
+def get_target_info_prompt():
     questions = [
         {
             'type': 'input',
@@ -68,7 +106,7 @@ def get_target_info():
     return answers['date_of_action'], answers['sourdough_weight_target_in_grams']
 
 
-def get_extraction_info():
+def get_extraction_info_prompt():
     question = [
         {
             'type': 'input',
@@ -80,7 +118,7 @@ def get_extraction_info():
     return answer['sourdough_weight_used_in_grams']
 
 
-def get_refrigeration_action():
+def get_refrigeration_action_prompt():
     question = [
         {
             'type': 'list',
@@ -96,14 +134,104 @@ def get_refrigeration_action():
     return answer['in_or_out']
 
 
-if __name__ == '__main__':
-    name, last_name, email = get_account_info()
-    #water, flour = get_water_and_flour_weights()
-    r = requests.post(
+def stay_or_leave():
+    question = [
+        {
+            'type': 'list',
+            'name': 'stay_or_leave',
+            'message': 'Do you want to perform another action?',
+            'choices': [
+                'do another action',
+                'logout'
+            ]
+        }
+    ]
+    answers = prompt(question, style=custom_style_2)
+    return answers['stay_or_leave']
+
+
+def has_account() -> bool:
+    question = [
+        {
+            'type': 'list',
+            'name': 'existing_account',
+            'message': 'login or sign up',
+            'choices': [
+                'login',
+                'sign up'
+            ]
+        }
+    ]
+    answers = prompt(question, style=custom_style_2)
+    return answers['existing_account'] == "login"
+
+
+def create_account():
+    name, last_name, email = get_account_info_prompt()
+    request = requests.post(
         "http://127.0.0.1:5000/create_account",
         params={"name": name, "last_name": last_name, "email": email}
     )
-    response = json.loads(r.text)
-    print(response)
+    response = json.loads(request.text)
+    message = deserialize_message(response)
+    if isinstance(message, SuccessMessage):
+        return email
+    else:
+        print(message)
+        raise Exception("Failed to sign up")
+
+
+def login():
+    email = get_email()
+    request = requests.post(
+        "http://127.0.0.1:5000/is_user_in_database",
+        params={"email": email}
+    )
+    response = json.loads(request.text)
+    message = deserialize_message(response)
+    if isinstance(message, SuccessMessage):
+        return email
+    else:
+        print(message)
+        raise Exception("Failed to login in")
+
+
+def do_a_feeding_action(user_email):
+    water, flour = get_water_and_flour_weights_prompt()
+    request = requests.post(
+        "http://127.0.0.1:5000/add_a_feeding_action",
+        params={'email': user_email, 'water_weight_added_in_grams': water, 'flour_weight_added_in_grams': flour}
+    )
+    response = json.loads(request.text)
     message = deserialize_message(response)
     print(message)
+
+
+def sign_up_or_login() -> str:
+    if has_account():
+        return login()
+    else:
+        return create_account()
+
+
+def start():
+    print("Welcome to SourdoughPy.")
+    print(BREAD_ASCII_ART)
+    email = sign_up_or_login()
+    action = ask_for_action_prompt()
+    if action == 'feeding action':
+        do_a_feeding_action(email)
+
+
+if __name__ == '__main__':
+    start()
+#    r = requests.post(
+#        "http://127.0.0.1:5000/create_account",
+#        params={"name": name, "last_name": last_name, "email": email}
+#    )
+#    response = json.loads(r.text)
+#    print(response)
+#    message = deserialize_message(response)
+#    print(message)
+#    create_account()
+#    do_a_feeding_action()
