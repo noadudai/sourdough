@@ -126,6 +126,8 @@ def do_actions_today(user_email):
     message = deserialize_response(request.text, expected_message_types=[PerformActionsMessage, FailedMessage])
 
     if isinstance(message, PerformActionsMessage):
+        if len(message.actions) == 0:
+            print("No actions left for today")
         for action in message.actions:
             if isinstance(action, FeedingAction):
                 print(

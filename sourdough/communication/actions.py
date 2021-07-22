@@ -65,7 +65,7 @@ class RefrigerationAction(Action):
     @staticmethod
     def from_dict(serialized: dict):
         Action.verify_action_type(serialized, RefrigerationAction)
-        return RefrigerationAction(in_or_out=serialized["refrigeration_action"]["in_or_out"])
+        return RefrigerationAction(in_or_out=serialized["refrigeration_action"])
 
 
 class TargetAction(Action):
@@ -96,14 +96,13 @@ def deserialize_actions(serialized: List[dict]):
 
 
 def deserialize_action(serialized: dict):
-    if "feeding_action" in serialized:
+    if serialized[Action.ACTION_TYPE_KEY] == FeedingAction.__name__:
         return FeedingAction.from_dict(serialized)
-    elif "extraction_action" in serialized:
+    elif serialized[Action.ACTION_TYPE_KEY] == ExtractionAction.__name__:
         return ExtractionAction.from_dict(serialized)
-    elif "refrigerator_action" in serialized:
+    elif serialized[Action.ACTION_TYPE_KEY] == RefrigerationAction.__name__:
         return RefrigerationAction.from_dict(serialized)
-    elif "target_action" in serialized:
+    elif serialized[Action.ACTION_TYPE_KEY] == TargetAction.__name__:
         return TargetAction.from_dict(serialized)
     else:
         raise Exception(f"Unknown action type {serialized}")
-

@@ -13,5 +13,11 @@ class RefrigeratorActionModel(Base):
     date_of_action = Column(DateTime, default=datetime.datetime.now)
     in_or_out = Column(String, nullable=False)
 
+    @property
+    def days_from_today(self):
+        today = datetime.datetime.today().date()
+        delta = self.date_of_action.date() - today
+        return delta.days
+
     def __repr__(self):
         return f"<RefrigeratorActionModel(date_of_action={self.date_of_action}, in_or_out={self.in_or_out})>"
