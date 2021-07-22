@@ -11,6 +11,6 @@ setup(name='sourdough',
           'Flask==1.1.2',
           'PyInquirer==1.0.3',
           'requests==2.25.1',
-
+          'prompt_toolkit==1.0.14'
       ],
       )
