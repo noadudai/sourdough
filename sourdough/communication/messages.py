@@ -38,7 +38,6 @@ class PerformActionsMessage(Message):
         return PerformActionsMessage(actions)
 
 
-
 class ActionsPerformedMessage(Message):
     ACTIONS_PERFORMED_KEY = "actions_performed"
 
@@ -60,7 +59,6 @@ class ActionsPerformedMessage(Message):
         return ActionsPerformedMessage(actions)
 
 
-
 class SuccessMessage(Message):
     REASON_KEY = "reason"
 
@@ -78,7 +76,6 @@ class SuccessMessage(Message):
 
         reason = serialized_dict[SuccessMessage.REASON_KEY]
         return SuccessMessage(reason)
-
 
     def __repr__(self):
         return f"SuccessMessage: {self.reason}"
@@ -103,9 +100,31 @@ class FailedMessage(Message):
         exception = serialized_dict[FailedMessage.EXCEPTION_KEY]
         return FailedMessage(exception)
 
-
     def __repr__(self):
         return f"FailedMessage: {self.exception}"
+
+
+class InfoMessage(Message):
+    INFO_KEY = "info"
+
+    def __init__(self, info):
+        self.info = info
+
+    def to_dict(self):
+        return {
+            Message.MESSAGE_TYPE_KEY: InfoMessage.__name__,
+            InfoMessage.INFO_KEY: self.info
+        }
+
+    @staticmethod
+    def from_dict(serialized_dict):
+        Message.verify_message_type(serialized_dict, InfoMessage)
+
+        info = serialized_dict[InfoMessage.INFO_KEY]
+        return InfoMessage(info)
+
+    def __repr__(self):
+        return f"InfoMessage: {self.info}"
 
 
 def deserialize_message(serialized: dict) -> Message:
@@ -117,5 +136,7 @@ def deserialize_message(serialized: dict) -> Message:
         return ActionsPerformedMessage.from_dict(serialized)
     elif serialized[Message.MESSAGE_TYPE_KEY] == PerformActionsMessage.__name__:
         return PerformActionsMessage.from_dict(serialized)
+    elif serialized[Message.MESSAGE_TYPE_KEY] == InfoMessage.__name__:
+        return InfoMessage.from_dict(serialized)
     else:
         raise Exception(f"Unknown message type {serialized}")
