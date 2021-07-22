@@ -104,7 +104,7 @@ def get_refrigeration_action_prompt():
         {
             'type': 'list',
             'name': 'in_or_out',
-            'message': 'Did you put your sourdough starter in or did you take yit out of the refrigerator?',
+            'message': 'Did you put your sourdough starter in or did you take it out of the refrigerator?',
             'choices': [
                 'in',
                 'out'

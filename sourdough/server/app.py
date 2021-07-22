@@ -12,7 +12,7 @@ import datetime
 import json
 
 from sourdough.communication.actions import RefrigerationAction, FeedingAction, ExtractionAction, Action
-from sourdough.communication.messages import PerformActionsMessage, SuccessMessage, FailedMessage
+from sourdough.communication.messages import PerformActionsMessage, SuccessMessage, FailedMessage, InfoMessage
 
 app = Flask(__name__)
 
@@ -51,6 +51,24 @@ def show_all_users():
         return_str = str(return_list)
         return jsonify(return_str)
 
+
+@app.route('/sourdough_info', methods=["GET", "POST"])
+def sourdough_info():
+    with Session() as session:
+        try:
+            user_email = request.args.get('email')
+            user_model = get_user(user_email, session)
+            sourdough_model: SourdoughModel = session.query(SourdoughModel).filter_by(user_id=user_model.id).one()
+            infos = []
+            if len(sourdough_model.upcoming_sourdough_targets) > 0:
+                infos.append(f"target in {sourdough_model.next_sourdough_target.days_from_today} days from today")
+            infos.append(f"fridge status: {sourdough_model.in_refrigerator}")
+            infos.append(f"sourdough weight: {sourdough_model.weight}")
+            info_message = InfoMessage("\n".join(infos))
+            return json.dumps(info_message.to_dict())
+        except Exception as e:
+            message_failed = FailedMessage(repr(e))
+            return json.dumps(message_failed.to_dict())
 
 # A flask function to add a new sourdough target to the database for the specified user provided from the email.
 @app.route('/add_a_target', methods=["GET", "POST"])

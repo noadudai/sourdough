@@ -10,7 +10,7 @@ from sourdough.cli.prompts import ask_for_action_prompt, get_account_info_prompt
     stay_or_leave_prompt, has_account_prompt
 from sourdough.communication.actions import FeedingAction, ExtractionAction, RefrigerationAction
 from sourdough.communication.messages import SuccessMessage, deserialize_message, PerformActionsMessage, Message, \
-    FailedMessage
+    FailedMessage, InfoMessage
 
 BREAD_ASCII_ART = """      
                              ██████████████                          
@@ -153,6 +153,19 @@ def sign_up_or_login() -> str:
 
 
 def select_and_perform_action(email):
+    request = requests.post(
+        "http://127.0.0.1:5000/sourdough_info",
+        params={'email': email}
+    )
+    message = deserialize_response(request.text, expected_message_types=[InfoMessage, FailedMessage])
+    if isinstance(message, InfoMessage):
+        print("======= INFO =======")
+        print(message.info)
+        print("====================")
+    if isinstance(message, FailedMessage):
+        print("Failed fetching info")
+        print(message)
+
     action = ask_for_action_prompt()
     if action == 'feeding action':
         do_a_feeding_action(email)
@@ -166,6 +179,7 @@ def select_and_perform_action(email):
         do_actions_today(email)
     else:
         raise Exception("Unknown action input")
+
 
 def start():
     print("Welcome to SourdoughPy")
