@@ -4,9 +4,17 @@ from typing import List
 
 
 class Action:
+    ACTION_TYPE_KEY = "action_type"
+
     @abstractmethod
     def to_dict(self):
         raise NotImplementedError()
+
+    @staticmethod
+    def verify_action_type(serialized_dict: dict, target_action_class):
+        class_name = target_action_class.__name__
+        if serialized_dict[Action.ACTION_TYPE_KEY] != class_name:
+            raise Exception(f"serialized dict does not represent a {class_name}")
 
 
 class FeedingAction(Action):
@@ -16,10 +24,14 @@ class FeedingAction(Action):
         self.flour = flour
 
     def to_dict(self):
-        return {"feeding_action": {"water": self.water, "flour": self.flour}}
+        return {
+            Action.ACTION_TYPE_KEY: FeedingAction.__name__,
+            "feeding_action": {"water": self.water, "flour": self.flour}
+        }
 
     @staticmethod
     def from_dict(serialized: dict):
+        Action.verify_action_type(serialized, FeedingAction)
         return FeedingAction(water=serialized["feeding_action"]["water"], flour=serialized["feeding_action"]["flour"])
 
 
@@ -28,10 +40,14 @@ class ExtractionAction(Action):
         self.extraction_weight = extraction_weight
 
     def to_dict(self):
-        return {"extraction_action": {"extract": self.extraction_weight}}
+        return {
+            Action.ACTION_TYPE_KEY: ExtractionAction.__name__,
+            "extraction_action": {"extract": self.extraction_weight}
+        }
 
     @staticmethod
     def from_dict(serialized: dict):
+        Action.verify_action_type(serialized, ExtractionAction)
         return ExtractionAction(extraction_weight=serialized["extraction_action"]["extraction_weight"])
 
 
@@ -41,10 +57,14 @@ class RefrigerationAction(Action):
         self.in_or_out = in_or_out
 
     def to_dict(self):
-        return {"refrigeration_action": self.in_or_out}
+        return {
+            Action.ACTION_TYPE_KEY: RefrigerationAction.__name__,
+            "refrigeration_action": self.in_or_out
+        }
 
     @staticmethod
     def from_dict(serialized: dict):
+        Action.verify_action_type(serialized, RefrigerationAction)
         return RefrigerationAction(in_or_out=serialized["refrigeration_action"]["in_or_out"])
 
 
@@ -54,10 +74,14 @@ class TargetAction(Action):
         self.target_weight = target_weight
 
     def to_dict(self) -> dict:
-        return {"target_action": {"date": self.date.isoformat(), "target_weight": self.target_weight}}
+        return {
+            Action.ACTION_TYPE_KEY: TargetAction.__name__,
+            "target_action": {"date": self.date.isoformat(), "target_weight": self.target_weight}
+        }
 
     @staticmethod
     def from_dict(serialized: dict):
+        Action.verify_action_type(serialized, TargetAction)
         return TargetAction(
             date=datetime.date.fromisoformat(serialized["target_action"]["date"]),
             target_weight=serialized["target_action"]["target_weight"]
