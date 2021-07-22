@@ -13,6 +13,12 @@ class ExtractionModel(Base):
     date_of_action = Column(DateTime, default=datetime.datetime.now)
     sourdough_weight_used_in_grams = Column(Integer, nullable=False)
 
+    @property
+    def days_from_today(self):
+        today = datetime.datetime.today().date()
+        delta = self.date_of_action.date() - today
+        return delta.days
+
     def __repr__(self):
         return f"<(ExtractionModel(date_of_action={self.date_of_action}, " \
                f"sourdough_weight_used_in_grams={self.sourdough_weight_used_in_grams})>"

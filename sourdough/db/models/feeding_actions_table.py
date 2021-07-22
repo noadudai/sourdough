@@ -14,6 +14,12 @@ class FeedingActionModel(Base):
     water_weight_added_in_grams = Column(Integer, nullable=False)
     flour_weight_added_in_grams = Column(Integer, nullable=False)
 
+    @property
+    def days_from_today(self):
+        today = datetime.datetime.today().date()
+        delta = self.date_of_action.date() - today
+        return delta.days
+
     def __repr__(self):
         return f"<FeedingActionModel(date_of_action={self.date_of_action}, " \
                f"water_weight_added_in_grams={self.water_weight_added_in_grams}, " \
