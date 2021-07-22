@@ -1,3 +1,5 @@
+from typing import List
+
 from sourdough.db.models.feeding_actions_table import FeedingActionModel
 from sourdough.db.models.extractions_table import ExtractionModel
 from sourdough.db.models.refrigerator_actions_table import RefrigeratorActionModel
@@ -9,7 +11,7 @@ from flask import Flask, request, jsonify
 import datetime
 import json
 
-from sourdough.communication.actions import RefrigerationAction, FeedingAction, ExtractionAction
+from sourdough.communication.actions import RefrigerationAction, FeedingAction, ExtractionAction, Action
 from sourdough.communication.messages import PerformActionsMessage, SuccessMessage, FailedMessage
 
 app = Flask(__name__)
@@ -32,6 +34,9 @@ def create_account():
             session.flush()
             my_sourdough_model = SourdoughModel(user_id=my_user_model.id)
             session.add(my_sourdough_model)
+            session.flush()
+            not_in_fridge = RefrigeratorActionModel(sourdough_id=my_sourdough_model.id, in_or_out="out")
+            session.add(not_in_fridge)
             session.commit()
             message = SuccessMessage("Success")
             return json.dumps(message.to_dict())
@@ -117,7 +122,10 @@ def adding_a_refrigerator_action():
             user_email = request.args.get('email')
             in_or_out = request.args.get('in_or_out')
             user_model = get_user(user_email, session)
-            my_refrigerator_action_model = RefrigeratorActionModel(sourdough_id=user_model.id, in_or_out=in_or_out)
+            my_sourdough = session.query(SourdoughModel).filter_by(user_id=user_model.id).one()
+            if my_sourdough.last_refrigerator_action.in_or_out == in_or_out:
+                raise Exception("Sourdough refrigeration state must be different")
+            my_refrigerator_action_model = RefrigeratorActionModel(sourdough_id=my_sourdough.id, in_or_out=in_or_out)
             session.add(my_refrigerator_action_model)
             session.commit()
             message = SuccessMessage("Added a refrigeration action successfully.")
@@ -142,82 +150,69 @@ def my_sourdough_starter_weight():
             return json.dumps(message_failed.to_dict())
 
 
-# A flask function that returns a dictionary with actions the user need to perform,
-# according to all the data that is saved in ths database.
+def keep_sourdough_at_maintenance(sourdough_model) -> List[Action]:
+    actions_to_perform = list()
+
+    if sourdough_model.in_refrigerator:
+        if sourdough_model.days_in_refrigerator > 10:
+            # if sourdough is too long in the fridge, extract from it so it reaches minimum maintenance weight
+            if not sourdough_model.extracted_today:
+                extract = ExtractionAction(sourdough_model.weight - sourdough_model.min_maintenance_weight)
+                actions_to_perform.append(extract)
+            elif sourdough_model.fed_today:
+                # if already extracted, feed it by its own weight
+                feed = FeedingAction(sourdough_model.weight, sourdough_model.weight)
+                actions_to_perform.append(feed)
+        else:
+            """
+            sourdough is at maintenance and isnt too long in the fridge. do nothing
+            """
+
+    else:
+        # sourdough in maintenance must be in fridge
+        fridge_action = RefrigerationAction("in")
+        actions_to_perform.append(fridge_action)
+
+    return actions_to_perform
+
+
 @app.route('/my_action_today', methods=["GET", "POST"])
 def my_action_today():
     with Session() as session:
         try:
             user_email = request.args.get('email')
             user_model = get_user(user_email, session)
-            my_sourdough_model = session.query(SourdoughModel).filter_by(user_id=user_model.id).one()
-            days_until_target = my_sourdough_model.days_until_target
-            days_in_refrigerator = my_sourdough_model.days_in_refrigerator
-            target_weight = session.query(
-                            SourdoughTargetModel.sourdough_weight_target_in_grams
-                            ).filter_by(sourdough_id=my_sourdough_model.id)[-1]
-            refrigerator_state_model = session.query(
-                                       RefrigeratorActionModel.in_or_out).filter_by(sourdough_id=my_sourdough_model.id)[-1]
-            if days_until_target < 0:
-                if days_in_refrigerator == 10:
-                    if my_sourdough_model.is_over_maintenance_weight:
-                        refrigerator_action = RefrigerationAction("out")
-                        feeding_action = FeedingAction(my_sourdough_model.weight, my_sourdough_model.weight)
-                        refrigerator_action2 = RefrigerationAction("in")
-                        actions = [refrigerator_action, feeding_action, refrigerator_action2]
-                        message = PerformActionsMessage(actions)
-                        return json.load(message.to_dict())
-                    else:
-                        refrigerator_action = RefrigerationAction("out")
-                        extraction_action = ExtractionAction(my_sourdough_model.weight - 4)
-                        refrigerator_action2 = RefrigerationAction("in")
-                        actions = [refrigerator_action, extraction_action, refrigerator_action2]
-                        message = PerformActionsMessage(actions)
-                        return json.load(message.to_dict())
-                elif 9 < days_in_refrigerator > 1:
-                    refrigeration_action = RefrigerationAction(refrigerator_state_model.in_or_out)
-                    message = PerformActionsMessage([refrigeration_action])
-                    return json.dumps(message.to_dict())
-                else:
-                    raise Exception("The sourdough starter is in the refrigerator more than the max 10 days!.")
-            elif days_until_target == 0:
-                feeding_action = FeedingAction(str((target_weight.sourdough_weight_target_in_grams / 3) - 4),
-                                               str((target_weight.sourdough_weight_target_in_grams / 3) - 4))
-                extraction_action = ExtractionAction(str(target_weight.sourdough_weight_target_in_grams - 4))
-                refrigeration_action = RefrigerationAction("in")
-                action = [feeding_action, extraction_action, refrigeration_action]
-                message = PerformActionsMessage(action)
-                return json.dumps(message.to_dict())
-            elif 0 < days_until_target <= 2:
-                feeding_action = FeedingAction(str(my_sourdough_model.weight), str(my_sourdough_model.weight))
-                message = PerformActionsMessage([feeding_action])
-                return json.dumps(message.to_dict())
-            elif days_until_target == 3:
-                refrigeration_action = RefrigerationAction("out")
-                extraction_action = ExtractionAction(str(my_sourdough_model.weight - 2))
-                feeding_action = FeedingAction("2", "2")
-                actions = [refrigeration_action, extraction_action, feeding_action]
-                message = PerformActionsMessage(actions)
-                return json.dumps(message.to_dict())
-            elif 9 < days_until_target > 3:
-                refrigeration_action = RefrigerationAction("in")
-                message = PerformActionsMessage([refrigeration_action])
-                return json.dumps(message.to_dict())
-            elif days_until_target >= 10:
-                if my_sourdough_model.is_over_maintenance_weight:
-                    refrigerator_action = RefrigerationAction("out")
-                    feeding_action = FeedingAction(my_sourdough_model.weight, my_sourdough_model.weight)
-                    refrigerator_action2 = RefrigerationAction("in")
-                    actions = [refrigerator_action, feeding_action, refrigerator_action2]
-                    message = PerformActionsMessage(actions)
-                    return json.load(message.to_dict())
-                else:
-                    refrigerator_action = RefrigerationAction("out")
-                    extraction_action = ExtractionAction(my_sourdough_model.weight - 4)
-                    refrigerator_action2 = RefrigerationAction("in")
-                    actions = [refrigerator_action, extraction_action, refrigerator_action2]
-                    message = PerformActionsMessage(actions)
-                    return json.load(message.to_dict())
+            sourdough_model: SourdoughModel = session.query(SourdoughModel).filter_by(user_id=user_model.id).one()
+
+            actions_to_perform = list()
+
+            if sourdough_model.has_upcoming_targets:
+                next_sourdough_target = sourdough_model.next_sourdough_target
+                if next_sourdough_target.days_from_today > 3:
+                    # if target is more than 3 days in the future, keep at maintenance
+                    actions_to_perform += keep_sourdough_at_maintenance(sourdough_model)
+
+                elif 0 < next_sourdough_target.days_from_today <= 3:
+                    # if in the 3 last days before target, feed to triple weight every day
+                    if sourdough_model.in_refrigerator:
+                        fridge_action = RefrigerationAction("out")
+                        actions_to_perform.append(fridge_action)
+                    if not sourdough_model.fed_today:
+                        feed = FeedingAction(sourdough_model.weight, sourdough_model.weight)
+                        actions_to_perform.append(feed)
+
+                elif next_sourdough_target.days_from_today == 0:
+                    # if today is the target day, feed until target weight
+                    missing_weight = next_sourdough_target.sourdough_weight_target_in_grams - sourdough_model.weight
+                    feed = FeedingAction(missing_weight / 2, missing_weight / 2)
+                    actions_to_perform.append(feed)
+            else:
+                # sourdough has no upcoming targets
+                actions_to_perform += keep_sourdough_at_maintenance(sourdough_model)
+
+            # send message back to requester
+            message = PerformActionsMessage(actions_to_perform)
+            return json.dumps(message.to_dict())
         except Exception as e:
             message_failed = FailedMessage(repr(e))
             return json.dumps(message_failed.to_dict())
@@ -225,7 +220,7 @@ def my_action_today():
 
 # A function to check if the user with the given email is saved in the database, and returns the UserModel object.
 # If the user is not in the database, returns an exception.
-def get_user(email, session):
+def get_user(email, session) -> UserModel:
     try:
         return session.query(UserModel).filter_by(email=email).one()
     except Exception as e:
