@@ -13,4 +13,5 @@ setup(name='sourdough',
           'requests==2.25.1',
           'prompt_toolkit==1.0.14'
       ],
+      packages=["sourdough"]
       )
